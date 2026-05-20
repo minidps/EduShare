@@ -1,0 +1,236 @@
+/* ==========================================================================
+   EXTENDED DEDICATED FORUM PAGE STYLINGS
+   ========================================================================== */
+
+.forum-page-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Sidebar Menu Panel */
+.forum-sidebar {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.create-post-btn {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: bold;
+}
+
+.sidebar-menu-wrapper h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #999;
+  margin: 0 0 0.5rem 0;
+}
+
+.sidebar-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #555;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sidebar-link:hover {
+  background-color: #f3f4f6;
+  color: #111;
+}
+
+.sidebar-link.active {
+  background-color: #eff6ff;
+  color: #0070f3;
+  font-weight: bold;
+}
+
+/* Right Side Main Feed Area */
+.forum-feed-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.forum-feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 1rem;
+}
+
+.forum-feed-header h2 {
+  margin: 0;
+}
+
+.forum-sorting-tabs {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.forum-sorting-tabs span {
+  cursor: pointer;
+  padding-bottom: 0.25rem;
+}
+
+.forum-sorting-tabs .active-tab {
+  color: #0070f3;
+  border-bottom: 2px solid #0070f3;
+  font-weight: bold;
+}
+
+/* Extended Complex Card Row layout */
+.extended-forum-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.extended-post-card {
+  display: flex;
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 1.25rem;
+  gap: 1.25rem;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+
+.extended-post-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* Voting Grid System */
+.post-vote-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f8fafc;
+  padding: 0.5rem;
+  border-radius: 6px;
+  min-width: 44px;
+}
+
+.vote-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.25rem;
+}
+
+.vote-btn:hover {
+  color: #0070f3;
+}
+
+.vote-count {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #334155;
+  margin: 0.1rem 0;
+}
+
+/* Center Content Core */
+.post-main-content {
+  flex-grow: 1;
+}
+
+.post-category-tag {
+  font-size: 0.75rem;
+  background-color: #f1f5f9;
+  color: #475569;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.post-title-text {
+  margin: 0.5rem 0;
+  font-size: 1.15rem;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.post-tags-container {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.post-author-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.author-avatar {
+  font-size: 1rem;
+}
+
+.author-name {
+  font-weight: 600;
+  color: #475569;
+}
+
+.bullet-divider {
+  color: #cbd5e1;
+}
+
+/* Right Column Metrics Display Box */
+.post-metrics-box {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-icon {
+  font-size: 1.1rem;
+  margin-bottom: 0.15rem;
+}
+
+/* Responsive configurations */
+@media (max-width: 900px) {
+  .forum-page-layout {
+    grid-template-columns: 1fr;
+  }
+  .extended-post-card {
+    flex-wrap: wrap;
+  }
+  .post-metrics-box {
+    width: 100%;
+    justify-content: flex-start;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 0.75rem;
+  }
+}
