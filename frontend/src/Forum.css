@@ -234,3 +234,20 @@
     padding-top: 0.75rem;
   }
 }
+
+/* Add these styles to the bottom of src/Forum.css */
+
+.vote-btn.active-upvote {
+  color: #10b981 !important; /* Changes arrow to solid emerald green */
+  transform: scale(1.2);
+}
+
+.vote-btn.active-downvote {
+  color: #ef4444 !important; /* Changes arrow to solid coral red */
+  transform: scale(1.2);
+}
+
+.vote-count.voted-count {
+  color: #1e293b;
+  font-weight: 800;
+}
