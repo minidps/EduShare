@@ -36,13 +36,6 @@ body {
   font-size: 1.5rem;
   font-weight: bold;
   color: #0070f3;
-  cursor: pointer;
-  user-select: none;
-  transition: opacity 0.2s ease;
-}
-
-.logo:hover {
-  opacity: 0.85;
 }
 
 .nav-links {

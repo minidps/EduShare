@@ -17,10 +17,6 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<PageMode>('home');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [authMode, setAuthMode] = useState<AuthMode>('none');
-  
-  // New Authentication States
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [redirectToForumAfterLogin, setRedirectToForumAfterLogin] = useState<boolean>(false);
 
   const categories: string[] = ['Mathematics', 'Biology', 'History', 'Computer Science', 'Physics', 'Literature'];
   
@@ -40,34 +36,9 @@ export default function App() {
     console.log('Searching for:', searchQuery);
   };
 
-  // Guarded Route function for entering the Forum
-  const handleForumNavigation = () => {
-    if (isLoggedIn) {
-      setCurrentPage('forum');
-    } else {
-      setRedirectToForumAfterLogin(true);
-      setAuthMode('login');
-    }
-  };
-
-  // Core Authentication Handler
   const handleAuthSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // Simulate login success
-    setIsLoggedIn(true);
     setAuthMode('none'); 
-
-    // If they were trying to access the forum, send them there now
-    if (redirectToForumAfterLogin) {
-      setCurrentPage('forum');
-      setRedirectToForumAfterLogin(false); // Reset token flag
-    }
-  };
-
-  const handleLogOut = () => {
-    setIsLoggedIn(false);
-    setCurrentPage('home');
   };
 
   const toggleAuthFromModal = (mode: 'login' | 'signup') => {
@@ -85,16 +56,9 @@ export default function App() {
           </div>
           <nav className="nav-links">
             <button className={`nav-link-btn ${currentPage === 'home' ? 'active-nav' : ''}`} onClick={() => setCurrentPage('home')}>Home</button>
-            <button className={`nav-link-btn ${currentPage === 'forum' ? 'active-nav' : ''}`} onClick={handleForumNavigation}>Forum</button>
-            
-            {isLoggedIn ? (
-              <button className="btn-secondary" onClick={handleLogOut}>Log Out</button>
-            ) : (
-              <>
-                <button className="btn-secondary" onClick={() => setAuthMode('login')}>Log In</button>
-                <button className="btn-primary" onClick={() => setAuthMode('signup')}>Sign Up</button>
-              </>
-            )}
+            <button className={`nav-link-btn ${currentPage === 'forum' ? 'active-nav' : ''}`} onClick={() => setCurrentPage('forum')}>Forum</button>
+            <button className="btn-secondary" onClick={() => setAuthMode('login')}>Log In</button>
+            <button className="btn-primary" onClick={() => setAuthMode('signup')}>Sign Up</button>
           </nav>
         </header>
 
@@ -117,7 +81,7 @@ export default function App() {
 
               <div className="hero-ctas">
                 <button className="cta-browse">👋 Browse Material</button>
-                <button className="cta-upload" onClick={() => isLoggedIn ? alert('Upload modal here!') : setAuthMode('signup')}>📤 Upload Your Notes</button>
+                <button className="cta-upload" onClick={() => setAuthMode('signup')}>📤 Upload Your Notes</button>
               </div>
             </section>
 
@@ -156,7 +120,7 @@ export default function App() {
                 <h2>💬 Active Discussions</h2>
                 <div className="discussions-list">
                   {forumPreview.map((post) => (
-                    <div key={post.id} className="discussion-card interactive" onClick={handleForumNavigation}>
+                    <div key={post.id} className="discussion-card interactive" onClick={() => setCurrentPage('forum')}>
                       <h4>{post.title}</h4>
                       <div className="discussion-meta">
                         <div className="tags-wrapper">
@@ -167,7 +131,7 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-                <button className="view-all-forum-btn" onClick={handleForumNavigation}>
+                <button className="view-all-forum-btn" onClick={() => setCurrentPage('forum')}>
                   Go to Full Forum &rarr;
                 </button>
               </section>
@@ -209,13 +173,11 @@ export default function App() {
 
       {/* Auth Overlay Popups */}
       {authMode !== 'none' && (
-        <div className="modal-overlay" onClick={() => { setAuthMode('none'); setRedirectToForumAfterLogin(false); }}>
+        <div className="modal-overlay" onClick={() => setAuthMode('none')}>
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="modal-close-btn" onClick={() => { setAuthMode('none'); setRedirectToForumAfterLogin(false); }}>&times;</button>
+            <button type="button" className="modal-close-btn" onClick={() => setAuthMode('none')}>&times;</button>
             <h2>{authMode === 'login' ? 'Welcome Back' : 'Create an Account'}</h2>
-            <p className="modal-subtitle">
-              {redirectToForumAfterLogin ? "Please log in to view the EduShare Forums" : "Join the EduShare student community"}
-            </p>
+            <p className="modal-subtitle">Join the EduShare student community</p>
 
             <form onSubmit={handleAuthSubmit} className="modal-form">
               {authMode === 'signup' && (
