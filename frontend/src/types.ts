@@ -1,0 +1,1 @@
+export type PageMode = 'home' | 'forum' | 'create-post' | 'view-thread';

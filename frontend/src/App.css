@@ -44,6 +44,21 @@ body {
   align-items: center;
 }
 
+.user-menu {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.user-display {
+  font-weight: 600;
+  color: #0070f3;
+  padding: 0.5rem 0.75rem;
+  background-color: #eff6ff;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
 .nav-link-btn {
   background: none;
   border: none;
@@ -324,6 +339,17 @@ body {
 .modal-submit-btn { width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: bold; }
 .modal-toggle-text { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: #555; font-family: inherit; }
 .modal-toggle-text span { color: #0070f3; font-weight: 600; cursor: pointer; }
+
+.auth-error {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
 
 /* Page Change Animation */
 .animate-fade {
