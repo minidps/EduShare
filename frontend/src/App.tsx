@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Forum from './forum.tsx'; // Updated from Forum.tsx to lowercase forum.tsx
+import Forum from './forum.tsx'; // Correct lowercase target reference
 import CreatePost from './CreatePost.tsx';
 import PostDetail from './PostDetail.tsx';
 import './App.css';
@@ -50,10 +50,12 @@ export default function App() {
     { id: '2', title: 'How long are you guys studying for the SAT every day?', tags: ['General', 'SAT'], replies: 42 }
   ];
 
+  // Modified mock datasets with a mixture of zeroes and higher view/upvote items to make filters obvious
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([
-    { id: '1', title: 'Stuck on JavaScript closure problem... need help!', author: 'CodeNewbie', avatar: '👨‍💻', replies: 14, views: 142, upvotes: 22, tags: ['Coding', 'JS'], category: 'Computer Science', timeAgo: '2 hours ago', description: 'Can someone explain why closures remember their outer variable scope references even after the outer functions finish executing? A simple code example would be awesome!' },
-    { id: '2', title: 'How long are you guys studying for the SAT every day?', author: 'SatGrinder', avatar: '📚', replies: 42, views: 520, upvotes: 61, tags: ['General', 'SAT'], category: 'General', timeAgo: '5 hours ago', description: 'Trying to hit a 1500+ score on the upcoming test date. How many hours are you allocating daily between Math drills and reading test packets?' },
-    { id: '3', title: 'Can someone check my molecular geometry chart for Chemistry?', author: 'BioChemVibe', avatar: '🧪', replies: 3, views: 45, upvotes: 8, tags: ['Chemistry', 'Help'], category: 'Biology', timeAgo: '1 day ago', description: 'Unsure about the bent geometry angle definitions for water versus sulfur dioxide. Help is appreciated!', fileName: 'chem_chart_draft.pdf' },
+    { id: '1', title: 'Stuck on JavaScript closure problem... need help!', author: 'CodeNewbie', avatar: '👨‍💻', replies: 14, views: 142, upvotes: 22, tags: ['Coding', 'JS'], category: 'Computer Science', timeAgo: '2 hours ago', description: 'Can someone explain why closures remember their outer variable scope references even after the outer functions finish executing?' },
+    { id: '2', title: 'How long are you guys studying for the SAT every day?', author: 'SatGrinder', avatar: '📚', replies: 42, views: 520, upvotes: 61, tags: ['General', 'SAT'], category: 'General', timeAgo: '5 hours ago', description: 'Trying to hit a 1500+ score on the upcoming test date.' },
+    { id: '3', title: 'Can someone check my molecular geometry chart for Chemistry?', author: 'BioChemVibe', avatar: '🧪', replies: 0, views: 12, upvotes: 4, tags: ['Chemistry', 'Help'], category: 'Biology', timeAgo: '1 day ago', description: 'Unsure about the bent geometry angle definitions for water versus sulfur dioxide.' },
+    { id: '4', title: 'Physics mechanics homework projectile formula help', author: 'QuantumLeap', avatar: '🍎', replies: 0, views: 31, upvotes: 1, tags: ['Mechanics'], category: 'Physics', timeAgo: '3 days ago', description: 'Stuck resolving the horizontal component vectors for question 3.' }
   ]);
 
   const handleForumNavigation = () => {
@@ -98,7 +100,7 @@ export default function App() {
   return (
     <>
       <div className={`app-container ${authMode !== 'none' ? 'content-blur' : ''}`}>
-        {/* Navigation Bar */}
+        
         <header className="navbar">
           <div className="logo" onClick={() => setCurrentPage('home')}>EduShare</div>
           <nav className="nav-links">
@@ -115,7 +117,6 @@ export default function App() {
           </nav>
         </header>
 
-        {/* HOME VIEW */}
         {currentPage === 'home' && (
           <main className="main-content animate-fade">
             <section className="hero-section">
@@ -125,13 +126,9 @@ export default function App() {
                 <input type="text" placeholder="Search by subject, textbook, or keywords..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                 <button type="submit" className="search-btn">Search</button>
               </form>
-              <div className="hero-ctas">
-                <button className="cta-browse">👋 Browse Material</button>
-                <button className="cta-upload" onClick={() => setAuthMode('signup')}>📤 Upload Your Notes</button>
-              </div>
             </section>
 
-            <section id="browse" className="categories-section">
+            <section className="categories-section">
               <h2>Browse by Subject</h2>
               <div className="categories-grid">
                 {categories.map((category) => (
@@ -181,7 +178,6 @@ export default function App() {
           </main>
         )}
 
-        {/* FORUM VIEW */}
         {currentPage === 'forum' && (
           <main className="main-content">
             <Forum 
@@ -195,7 +191,6 @@ export default function App() {
           </main>
         )}
 
-        {/* CREATE POST VIEW */}
         {currentPage === 'create-post' && (
           <main className="main-content">
             <CreatePost 
@@ -206,7 +201,6 @@ export default function App() {
           </main>
         )}
 
-        {/* THREAD VIEW */}
         {currentPage === 'view-thread' && activeThreadPost && (
           <main className="main-content">
             <PostDetail 
@@ -217,33 +211,15 @@ export default function App() {
           </main>
         )}
 
-        {/* Statistics Banner */}
-        <main className="main-content" style={{paddingTop: 0, paddingBottom: 0}}>
-          <section className="stats-ticker">
-            <div className="stat-item"><div className="stat-number primary-color">25k+</div><div className="stat-label">Study Guides</div></div>
-            <div className="divider"></div>
-            <div className="stat-item"><div className="stat-number success-color">10k+</div><div className="stat-label">Active Students</div></div>
-            <div className="divider"></div>
-            <div className="stat-item"><div className="stat-number warning-color">98%</div><div className="stat-label">Helpfulness Rating</div></div>
-          </section>
-        </main>
-
         <footer className="footer">&copy; {new Date().getFullYear()} EduShare. Made by students, for students.</footer>
       </div>
 
-      {/* Auth Overlay Modal */}
       {authMode !== 'none' && (
         <div className="modal-overlay" onClick={() => setAuthMode('none')}>
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="modal-close-btn" onClick={() => setAuthMode('none')}>&times;</button>
             <h2>{authMode === 'login' ? 'Welcome Back' : 'Create an Account'}</h2>
             <form onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); setAuthMode('none'); }} className="modal-form">
-              {authMode === 'signup' && (
-                <div className="form-group">
-                  <label htmlFor="username">Username</label>
-                  <input type="text" id="username" placeholder="e.g. StudyMaster42" required />
-                </div>
-              )}
               <div className="form-group">
                 <label htmlFor="email">Email Address</label>
                 <input type="email" id="email" placeholder="you@school.com" required />

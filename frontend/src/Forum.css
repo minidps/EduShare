@@ -42,25 +42,25 @@
   border: none;
   padding: 0.6rem 0.75rem;
   font-size: 0.95rem;
-  font-family: inherit;
-  color: #555;
+  color: #475569;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: all 0.15s ease;
 }
 
 .sidebar-link:hover {
-  background-color: #f3f4f6;
-  color: #111;
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
 .sidebar-link.active {
   background-color: #eff6ff;
   color: #0070f3;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-/* Right Side Main Feed Area */
+/* Right Content Main Stream Container */
 .forum-feed-container {
   display: flex;
   flex-direction: column;
@@ -71,34 +71,41 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #eaeaea;
+  border-bottom: 1px solid #eaeaea;
   padding-bottom: 1rem;
 }
 
 .forum-feed-header h2 {
   margin: 0;
+  font-size: 1.5rem;
+  color: #1e293b;
 }
 
 .forum-sorting-tabs {
   display: flex;
   gap: 1.5rem;
   font-size: 0.95rem;
-  color: #666;
+  color: #64748b;
   font-weight: 500;
 }
 
 .forum-sorting-tabs span {
   cursor: pointer;
   padding-bottom: 0.25rem;
+  transition: color 0.15s;
+  user-select: none;
 }
 
-.forum-sorting-tabs .active-tab {
+.forum-sorting-tabs span:hover {
   color: #0070f3;
-  border-bottom: 2px solid #0070f3;
-  font-weight: bold;
 }
 
-/* Extended Complex Card Row layout */
+.forum-sorting-tabs span.active-tab {
+  color: #0070f3;
+  font-weight: 700;
+  border-bottom: 2px solid #0070f3;
+}
+
 .extended-forum-list {
   display: flex;
   flex-direction: column;
@@ -113,14 +120,20 @@
   padding: 1.25rem;
   gap: 1.25rem;
   align-items: center;
-  transition: box-shadow 0.2s;
 }
 
-.extended-post-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+.extended-post-card.interactive-row {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Voting Grid System */
+.extended-post-card.interactive-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+}
+
+/* Left Vote element box styling */
 .post-vote-box {
   display: flex;
   flex-direction: column;
@@ -136,12 +149,23 @@
   border: none;
   color: #94a3b8;
   cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.25rem;
+  font-size: 0.9rem;
+  padding: 0.2rem;
+  transition: all 0.15s;
 }
 
 .vote-btn:hover {
   color: #0070f3;
+}
+
+.vote-btn.active-upvote {
+  color: #10b981 !important;
+  transform: scale(1.2);
+}
+
+.vote-btn.active-downvote {
+  color: #ef4444 !important;
+  transform: scale(1.2);
 }
 
 .vote-count {
@@ -149,6 +173,11 @@
   font-weight: bold;
   color: #334155;
   margin: 0.1rem 0;
+}
+
+.vote-count.voted-count {
+  color: #1e293b;
+  font-weight: 800;
 }
 
 /* Center Content Core */
@@ -187,67 +216,40 @@
 }
 
 .author-avatar {
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .author-name {
-  font-weight: 600;
-  color: #475569;
+  font-weight: 500;
+  color: #334155;
 }
 
 .bullet-divider {
   color: #cbd5e1;
 }
 
-/* Right Column Metrics Display Box */
+/* Right Metric elements styling info */
 .post-metrics-box {
   display: flex;
-  gap: 1.5rem;
-  font-size: 0.85rem;
-  color: #64748b;
-  white-space: nowrap;
+  gap: 1.25rem;
+  min-width: 150px;
+  justify-content: flex-end;
 }
 
 .metric {
+  font-size: 0.85rem;
+  color: #64748b;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  gap: 0.25rem;
 }
 
-.metric-icon {
-  font-size: 1.1rem;
-  margin-bottom: 0.15rem;
-}
-
-/* Responsive configurations */
-@media (max-width: 900px) {
-  .forum-page-layout {
-    grid-template-columns: 1fr;
-  }
-  .extended-post-card {
-    flex-wrap: wrap;
-  }
-  .post-metrics-box {
-    width: 100%;
-    justify-content: flex-start;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 0.75rem;
-  }
-}
-
-/* Add these styles to the bottom of src/Forum.css */
-
-.vote-btn.active-upvote {
-  color: #10b981 !important; /* Changes arrow to solid emerald green */
-  transform: scale(1.2);
-}
-
-.vote-btn.active-downvote {
-  color: #ef4444 !important; /* Changes arrow to solid coral red */
-  transform: scale(1.2);
-}
-
-.vote-count.voted-count {
-  color: #1e293b;
-  font-weight: 800;
+.empty-feed-placeholder {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 0.95rem;
 }
