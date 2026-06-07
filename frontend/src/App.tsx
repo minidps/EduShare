@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Forum from './Forum.tsx'; // Updated from Forum.tsx to lowercase forum.tsx
+import Forum from './Forum.tsx';
 import CreatePost from './CreatePost.tsx';
 import PostDetail from './PostDetail.tsx';
 import './App.css';
@@ -9,6 +9,7 @@ interface User {
   id: number;
   username: string;
   email: string;
+  grade: string;
 }
 
 interface MaterialItem {
@@ -47,7 +48,6 @@ export default function App() {
   const [authError, setAuthError] = useState<string>('');
   const [authLoading, setAuthLoading] = useState<boolean>(false);
 
-  // Check if user is already logged in on app load
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (token) {
@@ -78,9 +78,11 @@ export default function App() {
     const username = formData.get('username') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const grade = formData.get('grade') as string;
 
+    console.log('Selected grade:', grade);
     try {
-      const response = await registerUser({ username, email, password });
+      const response = await registerUser({ username, email, password, grade });
       const { access, refresh, ...userData } = response.data;
       
       localStorage.setItem('access_token', access);
@@ -195,7 +197,9 @@ export default function App() {
             <button className={`nav-link-btn ${currentPage === 'forum' || currentPage === 'view-thread' ? 'active-nav' : ''}`} onClick={() => setCurrentPage('forum')}>Forum</button>
             {isLoggedIn && currentUser ? (
               <div className="user-menu">
-                <span className="user-display">👤 {currentUser.username}</span>
+                <span className="user-display">
+                  👤 {currentUser.username} • Grade {currentUser.grade}
+                </span>
                 <button className="btn-secondary" onClick={handleLogout}>Log Out</button>
               </div>
             ) : (
@@ -332,11 +336,34 @@ export default function App() {
             {authError && <div className="auth-error">{authError}</div>}
             <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="modal-form">
               {authMode === 'signup' && (
+              <>
                 <div className="form-group">
                   <label htmlFor="username">Username</label>
-                  <input type="text" id="username" name="username" placeholder="e.g. StudyMaster42" required />
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="e.g. StudyMaster42"
+                    required
+                  />
                 </div>
-              )}
+
+                <div className="form-group">
+                  <label htmlFor="grade">Grade</label>
+                  <select id="grade" name="grade" required>
+                    <option value="">Select your grade</option>
+                    <option value="6">6th Grade</option>
+                    <option value="7">7th Grade</option>
+                    <option value="8">8th Grade</option>
+                    <option value="9">9th Grade</option>
+                    <option value="10">10th Grade</option>
+                    <option value="11">11th Grade</option>
+                    <option value="12">12th Grade</option>
+                    <option value="college">College</option>
+                  </select>
+                </div>
+              </>
+            )}
               <div className="form-group">
                 <label htmlFor="email">{authMode === 'login' ? 'Email or Username' : 'Email Address'}</label>
                 <input type="text" id="email" name="email" placeholder={authMode === 'login' ? 'you@school.com or username' : 'you@school.com'} required />

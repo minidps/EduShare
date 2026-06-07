@@ -7,33 +7,38 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 
+from users.models import UserProfile
+
 
 @api_view(['POST'])
 def register(request):
     username = request.data.get('username')
     email = request.data.get('email')
     password = request.data.get('password')
+    grade = request.data.get('grade')
 
     if not username or not email or not password:
         return Response({"error": "Username, email, and password are required"}, status=400)
 
     if User.objects.filter(username=username).exists():
-        return Response({"error": "Username already exists"}, status=400)
+        return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
     if User.objects.filter(email=email).exists():
-        return Response({"error": "Email already exists"}, status=400)
+        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
     user = User.objects.create_user(username=username, email=email, password=password)
     
+    UserProfile.objects.create(user=user, grade=grade)
+
     refresh = RefreshToken.for_user(user)
 
     return Response({
-        "message": "User created successfully",
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
+        "id": user.id,
         "username": user.username,
         "email": user.email,
-        "id": user.id
+        "grade": grade,
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
     }, status=201)
 
 

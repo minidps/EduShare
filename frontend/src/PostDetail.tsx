@@ -51,7 +51,7 @@ export default function PostDetail({ post, onBack, onAddReplyCount }: PostDetail
 
     setReplies([...replies, newReply]);
     setCommentText('');
-    onAddReplyCount(post.id); // Increment total reply indicator numbers inside general layout state
+    onAddReplyCount(post.id);
   };
 
   return (
@@ -61,7 +61,6 @@ export default function PostDetail({ post, onBack, onAddReplyCount }: PostDetail
       </button>
 
       <div className="thread-main-container">
-        {/* Core Original Post Envelope Card */}
         <article className="thread-header-card">
           <div className="thread-meta-top">
             <span className="post-category-tag">{post.category}</span>
@@ -98,7 +97,6 @@ export default function PostDetail({ post, onBack, onAddReplyCount }: PostDetail
           </div>
         </article>
 
-        {/* Dynamic Interactive Replies Listing Section */}
         <section className="replies-section-wrapper">
           <h3>Discussion Thread ({post.replies + replies.length - 2})</h3>
           
@@ -117,7 +115,6 @@ export default function PostDetail({ post, onBack, onAddReplyCount }: PostDetail
             ))}
           </div>
 
-          {/* Form Action Input Node */}
           <form onSubmit={handleReplySubmit} className="add-reply-form-node">
             <label htmlFor="quick-comment">Join the conversation</label>
             <textarea 
