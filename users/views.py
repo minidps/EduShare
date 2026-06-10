@@ -7,7 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 
-from users.models import UserProfile
+from .models import UserProfile
 
 
 @api_view(['POST'])
@@ -17,18 +17,34 @@ def register(request):
     password = request.data.get('password')
     grade = request.data.get('grade')
 
-    if not username or not email or not password:
-        return Response({"error": "Username, email, and password are required"}, status=400)
+    if not username or not email or not password or not grade:
+        return Response(
+            {"error": "Username, email, password and grade are required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     if User.objects.filter(username=username).exists():
-        return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "Username already exists"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     if User.objects.filter(email=email).exists():
-        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "Email already exists"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    user = User.objects.create_user(username=username, email=email, password=password)
-    
-    UserProfile.objects.create(user=user, grade=grade)
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password
+    )
+
+    UserProfile.objects.create(
+        user=user,
+        grade=grade
+    )
 
     refresh = RefreshToken.for_user(user)
 
@@ -39,7 +55,7 @@ def register(request):
         "grade": grade,
         "access": str(refresh.access_token),
         "refresh": str(refresh),
-    }, status=201)
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
@@ -48,30 +64,42 @@ def login_view(request):
     password = request.data.get('password')
 
     if not username or not password:
-        return Response({"error": "Username and password are required"}, status=400)
+        return Response(
+            {"error": "Username and password are required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     user = authenticate(username=username, password=password)
 
     if user is None:
-        return Response({"error": "Invalid credentials"}, status=401)
+        return Response(
+            {"error": "Invalid credentials"},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    profile = UserProfile.objects.get(user=user)
 
     refresh = RefreshToken.for_user(user)
 
     return Response({
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
+        "id": user.id,
         "username": user.username,
         "email": user.email,
-        "id": user.id
-    }, status=200)
+        "grade": profile.grade,
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
+    }, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_current_user(request):
     user = request.user
+    profile = UserProfile.objects.get(user=user)
+
     return Response({
         "id": user.id,
         "username": user.username,
-        "email": user.email
-    }, status=200)
+        "email": user.email,
+        "grade": profile.grade,
+    }, status=status.HTTP_200_OK)
