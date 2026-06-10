@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Forum from './Forum.tsx';
 import CreatePost from './CreatePost.tsx';
 import PostDetail from './PostDetail.tsx';
@@ -36,15 +37,15 @@ interface ForumPost {
 }
 
 type AuthMode = 'none' | 'login' | 'signup';
-type PageMode = 'home' | 'forum' | 'create-post' | 'view-thread';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<PageMode>('home');
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [authMode, setAuthMode] = useState<AuthMode>('none');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeThreadPost, setActiveThreadPost] = useState<ForumPost | null>(null);
   const [authError, setAuthError] = useState<string>('');
   const [authLoading, setAuthLoading] = useState<boolean>(false);
 
@@ -61,7 +62,6 @@ export default function App() {
       setCurrentUser(response.data);
       setIsLoggedIn(true);
     } catch (error) {
-      // Token is invalid or expired
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       setIsLoggedIn(false);
@@ -80,7 +80,6 @@ export default function App() {
     const password = formData.get('password') as string;
     const grade = formData.get('grade') as string;
 
-    console.log('Selected grade:', grade);
     try {
       const response = await registerUser({ username, email, password, grade });
       const { access, refresh, ...userData } = response.data;
@@ -104,7 +103,7 @@ export default function App() {
     setAuthError('');
 
     const formData = new FormData(e.currentTarget);
-    const username = formData.get('email') as string; // Using email as username input
+    const username = formData.get('email') as string;
     const password = formData.get('password') as string;
 
     try {
@@ -129,7 +128,7 @@ export default function App() {
     localStorage.removeItem('refresh_token');
     setIsLoggedIn(false);
     setCurrentUser(null);
-    setCurrentPage('home');
+    navigate('/');
   };
 
   const categories: string[] = ['Mathematics', 'Biology', 'History', 'Computer Science', 'Physics', 'Literature'];
@@ -146,15 +145,10 @@ export default function App() {
   ];
 
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([
-    { id: '1', title: 'Stuck on JavaScript closure problem... need help!', author: 'CodeNewbie', avatar: '👨‍💻', replies: 14, views: 142, upvotes: 22, tags: ['Coding', 'JS'], category: 'Computer Science', timeAgo: '2 hours ago', description: 'Can someone explain why closures remember their outer variable scope references even after the outer functions finish executing? A simple code example would be awesome!' },
-    { id: '2', title: 'How long are you guys studying for the SAT every day?', author: 'SatGrinder', avatar: '📚', replies: 42, views: 520, upvotes: 61, tags: ['General', 'SAT'], category: 'General', timeAgo: '5 hours ago', description: 'Trying to hit a 1500+ score on the upcoming test date. How many hours are you allocating daily between Math drills and reading test packets?' },
-    { id: '3', title: 'Can someone check my molecular geometry chart for Chemistry?', author: 'BioChemVibe', avatar: '🧪', replies: 3, views: 45, upvotes: 8, tags: ['Chemistry', 'Help'], category: 'Biology', timeAgo: '1 day ago', description: 'Unsure about the bent geometry angle definitions for water versus sulfur dioxide. Help is appreciated!', fileName: 'chem_chart_draft.pdf' },
+    { id: '1', title: 'Stuck on JavaScript closure problem... need help!', author: 'CodeNewbie', avatar: '👨‍💻', replies: 14, views: 142, upvotes: 22, tags: ['Coding', 'JS'], category: 'Computer Science', timeAgo: '2 hours ago', description: 'Can someone explain why closures remember their outer variable scope references even after the outer functions finish executing?' },
+    { id: '2', title: 'How long are you guys studying for the SAT every day?', author: 'SatGrinder', avatar: '📚', replies: 42, views: 520, upvotes: 61, tags: ['General', 'SAT'], category: 'General', timeAgo: '5 hours ago', description: 'Trying to hit a 1500+ score on the upcoming test date.' },
+    { id: '3', title: 'Can someone check my molecular geometry chart for Chemistry?', author: 'BioChemVibe', avatar: '🧪', replies: 3, views: 45, upvotes: 8, tags: ['Chemistry', 'Help'], category: 'Biology', timeAgo: '1 day ago', description: 'Unsure about the bent geometry angle definitions.', fileName: 'chem_chart_draft.pdf' },
   ]);
-
-  const handleLaunchThreadView = (post: ForumPost) => {
-    setActiveThreadPost(post);
-    setCurrentPage('view-thread');
-  };
 
   const handleIncrementReplyMetrics = (postId: string) => {
     setForumPosts(prev => prev.map(p => p.id === postId ? { ...p, replies: p.replies + 1 } : p));
@@ -183,23 +177,20 @@ export default function App() {
     };
 
     setForumPosts([newPost, ...forumPosts]);
-    setCurrentPage('forum');
+    navigate('/forum'); // Истинска промяна на URL адреса към /forum
   };
 
   return (
     <>
       <div className={`app-container ${authMode !== 'none' ? 'content-blur' : ''}`}>
-        {/* Navigation Bar */}
         <header className="navbar">
-          <div className="logo" onClick={() => setCurrentPage('home')}>EduShare</div>
+          <div className="logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>EduShare</div>
           <nav className="nav-links">
-            <button className={`nav-link-btn ${currentPage === 'home' ? 'active-nav' : ''}`} onClick={() => setCurrentPage('home')}>Home</button>
-            <button className={`nav-link-btn ${currentPage === 'forum' || currentPage === 'view-thread' ? 'active-nav' : ''}`} onClick={() => setCurrentPage('forum')}>Forum</button>
+            <button className={`nav-link-btn ${location.pathname === '/' ? 'active-nav' : ''}`} onClick={() => navigate('/')}>Home</button>
+            <button className={`nav-link-btn ${location.pathname.startsWith('/forum') || location.pathname.startsWith('/post') || location.pathname === '/create-post' ? 'active-nav' : ''}`} onClick={() => navigate('/forum')}>Forum</button>
             {isLoggedIn && currentUser ? (
               <div className="user-menu">
-                <span className="user-display">
-                  👤 {currentUser.username} • Grade {currentUser.grade}
-                </span>
+                <span className="user-display">👤 {currentUser.username} • Grade {currentUser.grade}</span>
                 <button className="btn-secondary" onClick={handleLogout}>Log Out</button>
               </div>
             ) : (
@@ -211,109 +202,93 @@ export default function App() {
           </nav>
         </header>
 
-        {/* HOME VIEW */}
-        {currentPage === 'home' && (
-          <main className="main-content animate-fade">
-            <section className="hero-section">
-              <h1>Learn together. Score higher. Share resources.</h1>
-              <p>Access peer-reviewed student notes, study guides, and homework help entirely for free.</p>
-              <form onSubmit={(e) => e.preventDefault()} className="search-form">
-                <input type="text" placeholder="Search by subject, textbook, or keywords..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                <button type="submit" className="search-btn">Search</button>
-              </form>
-              <div className="hero-ctas">
-                <button className="cta-browse">👋 Browse Material</button>
-                <button className="cta-upload" onClick={() => setAuthMode('signup')}>📤 Upload Your Notes</button>
-              </div>
-            </section>
+        {/* ДЕФИНИРАНЕ НА URL МАРШРУТИТЕ */}
+        <Routes>
+          <Route path="/" element={
+            <main className="main-content animate-fade">
+              <section className="hero-section">
+                <h1>Learn together. Score higher. Share resources.</h1>
+                <p>Access peer-reviewed student notes, study guides, and homework help entirely for free.</p>
+                <form onSubmit={(e) => e.preventDefault()} className="search-form">
+                  <input type="text" placeholder="Search by subject..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  <button type="submit" className="search-btn">Search</button>
+                </form>
+                <div className="hero-ctas">
+                  <button className="cta-browse" onClick={() => navigate('/forum')}>👋 Browse Material</button>
+                  <button className="cta-upload" onClick={() => setAuthMode('signup')}>📤 Upload Your Notes</button>
+                </div>
+              </section>
 
-            <section id="browse" className="categories-section">
-              <h2>Browse by Subject</h2>
-              <div className="categories-grid">
-                {categories.map((category) => (
-                  <div key={category} className="category-card">
-                    <div className="category-icon">📚</div>
-                    <div className="category-name">{category}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <div className="dashboard-grid">
-              <section className="trending-section">
-                <h2>🔥 Trending Resources</h2>
-                <div className="resources-list">
-                  {trendingMaterials.map((item) => (
-                    <div key={item.id} className="resource-card">
-                      <div>
-                        <span className="badge">{item.type}</span>
-                        <span className="subject-tag">{item.subject}</span>
-                        <h4>{item.title}</h4>
-                      </div>
-                      <div className="stats-col"><div>📥 <strong>{item.downloads}</strong> downloads</div></div>
+              <section id="browse" className="categories-section">
+                <h2>Browse by Subject</h2>
+                <div className="categories-grid">
+                  {categories.map((category) => (
+                    <div key={category} className="category-card">
+                      <div className="category-icon">📚</div>
+                      <div className="category-name">{category}</div>
                     </div>
                   ))}
                 </div>
               </section>
 
-              <section className="forum-section">
-                <h2>💬 Active Discussions</h2>
-                <div className="discussions-list">
-                  {forumPreview.map((post) => (
-                    <div key={post.id} className="discussion-card interactive" onClick={() => setCurrentPage('forum')}>
-                      <h4>{post.title}</h4>
-                      <div className="discussion-meta">
-                        <div className="tags-wrapper">
-                          {post.tags.map(tag => <span key={tag} className="hash-tag">#{tag}</span>)}
+              <div className="dashboard-grid">
+                <section className="trending-section">
+                  <h2>🔥 Trending Resources</h2>
+                  <div className="resources-list">
+                    {trendingMaterials.map((item) => (
+                      <div key={item.id} className="resource-card">
+                        <div>
+                          <span className="badge">{item.type}</span>
+                          <span className="subject-tag">{item.subject}</span>
+                          <h4>{item.title}</h4>
                         </div>
-                        <div className="replies-count">💬 {post.replies} replies</div>
+                        <div className="stats-col"><div>📥 <strong>{item.downloads}</strong> downloads</div></div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="view-all-forum-btn" onClick={() => setCurrentPage('forum')}>Go to Full Forum &rarr;</button>
-              </section>
-            </div>
-          </main>
-        )}
+                    ))}
+                  </div>
+                </section>
 
-        {/* FORUM VIEW */}
-        {currentPage === 'forum' && (
-          <main className="main-content">
-            <Forum 
-              categories={categories} 
-              onOpenAuth={(mode) => setAuthMode(mode)} 
-              setCurrentPage={setCurrentPage}
-              forumPosts={forumPosts}
-              setForumPosts={setForumPosts}
-              onSelectPost={handleLaunchThreadView}
-            />
-          </main>
-        )}
+                <section className="forum-section">
+                  <h2>💬 Active Discussions</h2>
+                  <div className="discussions-list">
+                    {forumPreview.map((post) => (
+                      <div key={post.id} className="discussion-card interactive" onClick={() => navigate('/forum')}>
+                        <h4>{post.title}</h4>
+                        <div className="discussion-meta">
+                          <div className="tags-wrapper">{post.tags.map(tag => <span key={tag} className="hash-tag">#{tag}</span>)}</div>
+                          <div className="replies-count">💬 {post.replies} replies</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="view-all-forum-btn" onClick={() => navigate('/forum')}>Go to Full Forum &rarr;</button>
+                </section>
+              </div>
+            </main>
+          } />
 
-        {/* CREATE POST VIEW */}
-        {currentPage === 'create-post' && (
-          <main className="main-content">
-            <CreatePost 
-              categories={categories} 
-              onCancel={() => setCurrentPage('forum')}
-              onPublish={handlePublishPost}
-            />
-          </main>
-        )}
+          {/* URL: /forum */}
+          <Route path="/forum" element={
+            <main className="main-content">
+              <Forum categories={categories} onOpenAuth={(mode) => setAuthMode(mode)} forumPosts={forumPosts} setForumPosts={setForumPosts} />
+            </main>
+          } />
 
-        {/* THREAD VIEW */}
-        {currentPage === 'view-thread' && activeThreadPost && (
-          <main className="main-content">
-            <PostDetail 
-              post={activeThreadPost}
-              onBack={() => { setCurrentPage('forum'); setActiveThreadPost(null); }}
-              onAddReplyCount={handleIncrementReplyMetrics}
-            />
-          </main>
-        )}
+          {/* URL: /create-post */}
+          <Route path="/create-post" element={
+            <main className="main-content">
+              <CreatePost categories={categories} onPublish={handlePublishPost} />
+            </main>
+          } />
 
-        {/* Statistics Banner */}
+          {/* URL: /post/:id (Динамично ID на поста) */}
+          <Route path="/post/:id" element={
+            <main className="main-content">
+              <PostDetail forumPosts={forumPosts} onAddReplyCount={handleIncrementReplyMetrics} />
+            </main>
+          } />
+        </Routes>
+
         <main className="main-content" style={{paddingTop: 0, paddingBottom: 0}}>
           <section className="stats-ticker">
             <div className="stat-item"><div className="stat-number primary-color">25k+</div><div className="stat-label">Study Guides</div></div>
@@ -336,53 +311,39 @@ export default function App() {
             {authError && <div className="auth-error">{authError}</div>}
             <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="modal-form">
               {authMode === 'signup' && (
-              <>
-                <div className="form-group">
-                  <label htmlFor="username">Username</label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    placeholder="e.g. StudyMaster42"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="grade">Grade</label>
-                  <select id="grade" name="grade" required>
-                    <option value="">Select your grade</option>
-                    <option value="6">6th Grade</option>
-                    <option value="7">7th Grade</option>
-                    <option value="8">8th Grade</option>
-                    <option value="9">9th Grade</option>
-                    <option value="10">10th Grade</option>
-                    <option value="11">11th Grade</option>
-                    <option value="12">12th Grade</option>
-                    <option value="college">College</option>
-                  </select>
-                </div>
-              </>
-            )}
+                <>
+                  <div className="form-group">
+                    <label htmlFor="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="e.g. StudyMaster42" required />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="grade">Grade</label>
+                    <select id="grade" name="grade" required>
+                      <option value="">Select your grade</option>
+                      <option value="6">6th Grade</option>
+                      <option value="7">7th Grade</option>
+                      <option value="8">8th Grade</option>
+                      <option value="9">9th Grade</option>
+                      <option value="10">10th Grade</option>
+                      <option value="11">11th Grade</option>
+                      <option value="12">12th Grade</option>
+                      <option value="college">College</option>
+                    </select>
+                  </div>
+                </>
+              )}
               <div className="form-group">
                 <label htmlFor="email">{authMode === 'login' ? 'Email or Username' : 'Email Address'}</label>
-                <input type="text" id="email" name="email" placeholder={authMode === 'login' ? 'you@school.com or username' : 'you@school.com'} required />
+                <input type="text" id="email" name="email" required />
               </div>
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required />
+                <input type="password" id="password" name="password" required />
               </div>
               <button type="submit" className="btn-primary modal-submit-btn" disabled={authLoading}>
                 {authLoading ? 'Loading...' : (authMode === 'login' ? 'Sign In' : 'Get Started')}
               </button>
             </form>
-            <div className="modal-toggle-text">
-              {authMode === 'login' ? (
-                <>Don't have an account? <span onClick={() => setAuthMode('signup')}>Sign up here</span></>
-              ) : (
-                <>Already have an account? <span onClick={() => setAuthMode('login')}>Log in here</span></>
-              )}
-            </div>
           </div>
         </div>
       )}
