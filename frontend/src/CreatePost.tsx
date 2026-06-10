@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css'; // Импортираме стиловете на редактора
 import './CreatePost.css';
 
 interface CreatePostProps {
@@ -17,10 +19,7 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(categories[0] || 'Mathematics');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [description, setDescription] = useState('');
-  const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
-  
-  // Custom dropdown display toggle state tracking
+  const [description, setDescription] = useState(''); // Тук ще се пази HTML кода с текста и снимките
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const tagCatalog = [
@@ -29,10 +28,15 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
     'LabReport', 'EssayTips', 'Timeline', 'OrganicChem', 'Genetics'
   ];
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setAttachedFileName(e.target.files[0].name);
-    }
+  // Настройки на лентата с инструменти (Toolbar) на редактора
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'blockquote'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['image', 'link'], // Бутон за добавяне на снимка директно в текста!
+      ['clean']
+    ],
   };
 
   const toggleTagSelection = (tag: string) => {
@@ -53,8 +57,8 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
       title,
       category,
       tags: selectedTags.length > 0 ? selectedTags : ['General'],
-      description,
-      fileName: attachedFileName,
+      description, // Предаваме форматирания текст със снимките вътре
+      fileName: null, // Вече нямаме нужда от отделен прикачен файл, всичко е в текста
     });
   };
 
@@ -62,7 +66,7 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
     <div className="create-post-container animate-fade">
       <div className="create-post-header">
         <h2>Create a New Discussion Post</h2>
-        <p>Share questions, reference material parameters, or study workflows.</p>
+        <p>Share questions, code snippets, or imbed images directly inline with your text.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="create-post-form">
@@ -81,32 +85,16 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
         <div className="form-row">
           <div className="form-group flex-1">
             <label htmlFor="post-category">Subject Category</label>
-            <select 
-              id="post-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+            <select id="post-category" value={category} onChange={(e) => setCategory(e.target.value)}>
+              {categories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
               <option value="General">General Discussion</option>
             </select>
           </div>
 
-          {/* Persistent Custom Non-collapsing Multi-select Dropdown Element */}
           <div className="form-group flex-1 relative-wrapper">
             <label>Select Tags</label>
-            
-            <button 
-              type="button" 
-              className="custom-dropdown-trigger" 
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              <span>
-                {selectedTags.length === 0 
-                  ? '-- Open choice catalog dropdown --' 
-                  : `Selected (${selectedTags.length}) tags`}
-              </span>
+            <button type="button" className="custom-dropdown-trigger" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+              <span>{selectedTags.length === 0 ? '-- Open choice catalog dropdown --' : `Selected (${selectedTags.length}) tags`}</span>
               <span className="arrow-indicator">{isDropdownOpen ? '▲' : '▼'}</span>
             </button>
 
@@ -115,14 +103,8 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
                 {tagCatalog.map(tag => {
                   const isChecked = selectedTags.includes(tag);
                   return (
-                    <div 
-                      key={tag} 
-                      className={`custom-dropdown-option-row ${isChecked ? 'active-row-selected' : ''}`}
-                      onClick={() => toggleTagSelection(tag)}
-                    >
-                      <span className="dropdown-square-box">
-                        {isChecked ? '☑' : '☐'}
-                      </span>
+                    <div key={tag} className={`custom-dropdown-option-row ${isChecked ? 'active-row-selected' : ''}`} onClick={() => toggleTagSelection(tag)}>
+                      <span className="dropdown-square-box">{isChecked ? '☑' : '☐'}</span>
                       <span className="dropdown-tag-label-text">#{tag}</span>
                     </div>
                   );
@@ -132,7 +114,6 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
           </div>
         </div>
 
-        {/* Selected Display Badges View Module */}
         {selectedTags.length > 0 && (
           <div className="form-group">
             <div className="selected-chips-wrapper">
@@ -146,40 +127,23 @@ export default function CreatePost({ categories, onCancel, onPublish }: CreatePo
           </div>
         )}
 
+        {/* НОВИЯТ ИНЛАЙН РЕДАКТОР ЗА ТЕКСТ И СНИМКИ */}
         <div className="form-group">
-          <label htmlFor="post-description">Description & Details</label>
-          <textarea 
-            id="post-description" 
-            rows={8}
-            placeholder="Provide background context here so peers can construct better responses..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          ></textarea>
-        </div>
-
-        <div className="form-group">
-          <label className="file-upload-label">Attach Resource Files (Optional)</label>
-          <div className="file-dropzone">
-            <input 
-              type="file" 
-              id="file-attachments" 
-              onChange={handleFileChange}
-              className="hidden-file-input"
+          <label>Description & Details </label>
+          <div className="quill-editor-wrapper">
+            <ReactQuill 
+              theme="snow"
+              value={description}
+              onChange={setDescription}
+              modules={quillModules}
+              placeholder="Write your explanation here... Click the image button to insert graphics exactly where you need them."
             />
-            <label htmlFor="file-attachments" className="dropzone-trigger-btn">
-              {attachedFileName ? `📎 ${attachedFileName}` : '📂 Choose file or drag it here'}
-            </label>
           </div>
         </div>
 
         <div className="create-post-actions">
-          <button type="button" className="btn-secondary" onClick={onCancel}>
-            Cancel
-          </button>
-          <button type="submit" className="btn-primary">
-            Publish Post
-          </button>
+          <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>
+          <button type="submit" className="btn-primary">Publish Post</button>
         </div>
       </form>
     </div>
