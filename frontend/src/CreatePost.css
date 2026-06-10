@@ -170,3 +170,26 @@
 .dropzone-trigger-btn { display: block; cursor: pointer; color: #475569; font-weight: 500; font-size: 0.95rem; }
 .create-post-actions { display: flex; justify-content: flex-end; gap: 1rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; }
 .create-post-actions button { padding: 0.75rem 2rem; font-size: 0.95rem; font-weight: bold; }
+
+/* Ограничава снимките вътре в редактора и в готовия пост */
+.quill-editor-wrapper .ql-container {
+  min-height: 200px;
+  font-family: inherit;
+  font-size: 1rem;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.quill-editor-wrapper .ql-toolbar {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.rich-text-rendered img, 
+.quill-editor-wrapper img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+  display: block;
+}

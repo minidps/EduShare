@@ -39,16 +39,13 @@ export default function PostDetail({ post, onBack, onAddReplyCount }: PostDetail
 
   const handleReplySubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
-
     const newReply: Reply = {
       id: String(replies.length + 1),
-      author: 'GuestUser',
+      author: 'AnonymousStudent',
       avatar: '🎓',
       text: commentText,
       timeAgo: 'Just now'
     };
-
     setReplies([...replies, newReply]);
     setCommentText('');
     onAddReplyCount(post.id);
@@ -56,44 +53,40 @@ export default function PostDetail({ post, onBack, onAddReplyCount }: PostDetail
 
   return (
     <div className="post-detail-layout animate-fade">
-      <button className="back-feed-btn" onClick={onBack}>
-        &larr; Back to Forum Feed
-      </button>
+      <button className="back-feed-btn" onClick={onBack}>&larr; Back to Forum Feed</button>
 
       <div className="thread-main-container">
         <article className="thread-header-card">
           <div className="thread-meta-top">
             <span className="post-category-tag">{post.category}</span>
-            <span className="post-time">{post.timeAgo}</span>
+            <div className="post-tags-container">
+              {post.tags.map(tag => <span key={tag} className="hash-tag">#{tag}</span>)}
+            </div>
           </div>
 
-          <h1 className="thread-title">{post.title}</h1>
+          <h2 className="thread-title-heading">{post.title}</h2>
 
-          <div className="thread-author-bar">
-            <span className="author-avatar">{post.avatar}</span>
-            <div>
+          <div className="thread-author-profile">
+            <span className="profile-avatar">{post.avatar}</span>
+            <div className="profile-details-column">
               <strong>{post.author}</strong>
-              <div className="sub-text">Student Contributor</div>
+              <span className="profile-subtext">Posted {post.timeAgo}</span>
             </div>
           </div>
 
-          <div className="thread-body-description">
-            <p>{post.description || "Looking for input regarding this subject query. Check out the parameters and let me know your thoughts or answers below!"}</p>
+          {/* ПОДРЕДЕН ИНЛАЙН ТЕКСТ И СНИМКИ СЕ РЕНДЕРИРАТ ТУК */}
+          <div className="thread-body-content rich-text-rendered">
+            {post.description ? (
+              <div dangerouslySetInnerHTML={{ __html: post.description }} />
+            ) : (
+              <p>No description provided.</p>
+            )}
           </div>
 
-          {post.fileName && (
-            <div className="thread-attachment-box">
-              <span className="attachment-icon">📎 Attached Resource:</span>
-              <a href="#download" className="attachment-link-file" onClick={(e) => e.preventDefault()}>
-                {post.fileName} (Click to View)
-              </a>
-            </div>
-          )}
-
-          <div className="thread-stats-footer">
-            <span>▲ {post.upvotes} Upvotes</span>
-            <span>👁️ {post.views + 12} Views</span>
-            <span>💬 {post.replies + replies.length - 2} Replies</span>
+          <div className="thread-action-counters" style={{ marginTop: '1.5rem' }}>
+            <span className="counter-item">▲ {post.upvotes} Upvotes</span>
+            <span className="counter-item">👁️ {post.views} Views</span>
+            <span className="counter-item">💬 {post.replies + replies.length - 2} Replies</span>
           </div>
         </article>
 
