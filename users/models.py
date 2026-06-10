@@ -6,5 +6,12 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     grade = models.CharField(max_length=20)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.grade}"
+
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+
+
+class Grade(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    value = models.IntegerField()
