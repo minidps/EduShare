@@ -270,7 +270,7 @@ export default function App() {
           {/* URL: /forum */}
           <Route path="/forum" element={
             <main className="main-content">
-              <Forum categories={categories} onOpenAuth={(mode) => setAuthMode(mode)} forumPosts={forumPosts} setForumPosts={setForumPosts} />
+              <Forum categories={categories} forumPosts={forumPosts} setForumPosts={setForumPosts} />
             </main>
           } />
 

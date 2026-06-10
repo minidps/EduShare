@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 });
 
 // Използване на 'api' вместо 'axios' и съкращаване на пътищата
-export const registerUser = (data: { username: string; email: string; password: string }) =>
+export const registerUser = (data: { username: string; email: string; password: string; grade: string }) =>
   api.post("/register/", data);
 
 export const loginUser = (data: { username: string; password: string }) =>

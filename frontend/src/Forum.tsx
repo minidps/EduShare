@@ -19,12 +19,11 @@ interface ForumPost {
 
 interface ForumProps {
   categories: string[];
-  onOpenAuth: (mode: 'login' | 'signup') => void;
   forumPosts: ForumPost[];
   setForumPosts: React.Dispatch<React.SetStateAction<ForumPost[]>>;
 }
 
-export default function Forum({ categories, onOpenAuth, forumPosts, setForumPosts }: ForumProps) {
+export default function Forum({ categories, forumPosts, setForumPosts }: ForumProps) {
   const navigate = useNavigate();
   const [forumFilter, setForumFilter] = useState<string>('all');
   const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
