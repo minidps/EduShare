@@ -27,10 +27,11 @@ interface ForumPost {
 
 interface PostDetailProps {
   forumPosts: ForumPost[];
+  userVotes: Record<string, 'up' | 'down' | null>;
   onAddReplyCount: (id: string) => void;
 }
 
-export default function PostDetail({ forumPosts, onAddReplyCount }: PostDetailProps) {
+export default function PostDetail({ forumPosts, userVotes, onAddReplyCount }: PostDetailProps) {
   const { id } = useParams<{ id: string }>(); // Вземане на ID-то директно от URL адреса
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState('');
@@ -91,7 +92,7 @@ export default function PostDetail({ forumPosts, onAddReplyCount }: PostDetailPr
           <div className="thread-body-text-content" dangerouslySetInnerHTML={{ __html: post.description || '' }} />
 
           <div className="thread-footer-metrics">
-            <span className="metric-badge">▲ {post.upvotes} Upvotes</span>
+            <span className="metric-badge">▲ {post.upvotes + (userVotes[post.id] === 'up' ? 1 : userVotes[post.id] === 'down' ? -1 : 0)} Upvotes</span>
             <span className="metric-badge">💬 {post.replies + replies.length - 1} Replies</span>
           </div>
         </article>

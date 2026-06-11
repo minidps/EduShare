@@ -26,3 +26,6 @@ export const loginUser = (data: { username: string; password: string }) =>
 
 export const getCurrentUser = () =>
   api.get("/me/");
+
+export const submitVote = (data: { post_id: string; value: 'up' | 'down' | 'none' }) =>
+  api.post("/vote/", data);

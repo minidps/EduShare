@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import ReactQuill from 'react-quill-new';
-import { useNavigate } from 'react-router-dom';
 import 'react-quill-new/dist/quill.snow.css';
 import './CreatePost.css';
 
@@ -13,10 +12,10 @@ interface CreatePostProps {
     description: string;
     fileName: string | null;
   }) => void;
+  onCancel: () => void;
 }
 
-export default function CreatePost({ categories, onPublish }: CreatePostProps) {
-  const navigate = useNavigate();
+export default function CreatePost({ categories, onPublish, onCancel }: CreatePostProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(categories[0] || 'Mathematics');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -94,7 +93,7 @@ export default function CreatePost({ categories, onPublish }: CreatePostProps) {
         </div>
 
         <div className="create-post-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/forum')}>Cancel</button>
+          <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>
           <button type="submit" className="btn-primary">Publish Post</button>
         </div>
       </form>
