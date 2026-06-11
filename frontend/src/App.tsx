@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Forum from './Forum.tsx';
 import CreatePost from './CreatePost.tsx';
 import PostDetail from './PostDetail.tsx';
+import Account from './Аccount.tsx';
 import './App.css';
 import { registerUser, loginUser, getCurrentUser, submitVote } from './api/auth';
 
@@ -47,23 +48,26 @@ const initialForumPosts: ForumPost[] = [
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  useEffect(() => {
-  const path = location.pathname;
 
-  if (path === '/') {
-    document.title = "Home";
-  } else if (path === '/forum') {
-    document.title = "Forum";
-  } else if (path === '/create-post') {
-    document.title = "Create Post";
-  } else if (path.startsWith('/post/')) {
-    document.title = "View Post";
-  } else {
-    document.title = "EduShare";
-  }
-}, [location.pathname]);
+  useEffect(() => {
+    const path = location.pathname;
+
+    if (path === '/') {
+      document.title = "Home";
+    } else if (path === '/forum') {
+      document.title = "Forum";
+    } else if (path === '/create-post') {
+      document.title = "Create Post";
+    } else if (path.startsWith('/post/')) {
+      document.title = "View Post";
+    } else if (path === '/account') {
+      document.title = "My Account";
+    } else {
+      document.title = "EduShare";
+    }
+  }, [location.pathname]);
   
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Стейт за търсене на началната страница
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [authMode, setAuthMode] = useState<AuthMode>('none');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -160,7 +164,6 @@ export default function App() {
     navigate('/');
   };
 
-  // При изпращане на търсенето от Home страницата, пренасочваме към форум с query параметър
   const handleHomeSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -256,7 +259,14 @@ export default function App() {
             <button className={`nav-link-btn ${location.pathname.startsWith('/forum') || location.pathname.startsWith('/post') || location.pathname === '/create-post' ? 'active-nav' : ''}`} onClick={() => navigate('/forum')}>Forum</button>
             {isLoggedIn && currentUser ? (
               <div className="user-menu">
-                <span className="user-display">👤 {currentUser.username} • Grade {currentUser.grade}</span>
+                <span 
+                  className="user-display" 
+                  style={{ cursor: 'pointer' }} 
+                  onClick={() => navigate('/account')}
+                  title="View Account Details"
+                >
+                  👤 {currentUser.username} • Grade {currentUser.grade}
+                </span>
                 <button className="btn-secondary" onClick={() => setAuthMode('logout-confirm')}>Log Out</button>
               </div>
             ) : (
@@ -275,7 +285,6 @@ export default function App() {
                 <h1>Learn together. Score higher. Share resources.</h1>
                 <p>Access peer-reviewed student notes, study guides, and homework help entirely for free.</p>
                 
-                {/* Тук обвързахме формата с функцията ни за пренасочване с филтър */}
                 <form onSubmit={handleHomeSearchSubmit} className="search-form">
                   <input 
                     type="text" 
@@ -362,6 +371,12 @@ export default function App() {
               <PostDetail forumPosts={forumPosts} userVotes={userVotes} onVote={handleForumVote} onAddReplyCount={handleIncrementReplyMetrics} />
             </main>
           } />
+
+          <Route path="/account" element={
+            <main className="main-content">
+              <Account currentUser={currentUser} isLoggedIn={isLoggedIn} />
+            </main>
+          } />
         </Routes>
 
         <main className="main-content" style={{paddingTop: 0, paddingBottom: 0}}>
@@ -388,7 +403,7 @@ export default function App() {
                 <p style={{ color: '#64748b', marginBottom: '2rem' }}>You will need to sign back in to contribute or upload files.</p>
                 <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                   <button className="btn-secondary" style={{ padding: '0.75rem 2rem' }} onClick={() => setAuthMode('none')}>Cancel</button>
-                  <button className="btn-primary" style={{ padding: '0.75rem 2rem', backgroundColor: '#ef4444' }} onClick={handleLogout}>Yes, Log Out</button>
+                  <button className="btn-primary" style={{ padding: '0.75rem 2rem' }} onClick={handleLogout}>Yes, Log Out</button>
                 </div>
               </div>
             ) : (

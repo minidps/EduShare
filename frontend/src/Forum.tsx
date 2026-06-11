@@ -33,6 +33,7 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
   }, []);
 
   const forumFilter = searchParams.get('category') || 'all';
+  const searchQuery = searchParams.get('search') || '';
   const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
   const votesRecord = userVotes;
 
@@ -43,125 +44,89 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     return baseUpvotes;
   };
 
-  const forumSearch = searchParams.get('search') || '';
-
-  const handleVote = async (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
+  const handleVote = async (postId: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
-    const success = await onVote(id, type);
-    if (!success) return;
+    await onVote(postId, type);
   };
 
-  // Филтриране по табове/категории И по ключова дума от търсачката
+  // Филтриране по категория и търсене
   const filteredPosts = forumPosts.filter(post => {
-      const displayedUpvotes = getDisplayedUpvotes(post.id, post.upvotes);
-      // 1. Проверка на левите филтри/категории
-      let matchesCategory = true;
-      if (forumFilter === 'popular') matchesCategory = displayedUpvotes >= 15;
-    else if (forumFilter !== 'all') matchesCategory = post.category.toLowerCase() === forumFilter.toLowerCase();
-
-    // 2. Проверка на търсачката (за заглавие, описание или тагове)
-    let matchesSearch = true;
-    if (forumSearch.trim() !== '') {
-      const query = forumSearch.toLowerCase();
-      const inTitle = post.title.toLowerCase().includes(query);
-      const inDescription = post.description?.toLowerCase().includes(query) || false;
-      const inTags = post.tags.some(tag => tag.toLowerCase().includes(query));
-      
-      matchesSearch = inTitle || inDescription || inTags;
-    }
-
+    const matchesCategory = forumFilter === 'all' || post.category.toLowerCase() === forumFilter.toLowerCase();
+    const matchesSearch = searchQuery === '' || 
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
+  // Сортиране по табове
   const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (sortTab === 'top') return getDisplayedUpvotes(b.id, b.upvotes) - getDisplayedUpvotes(a.id, a.upvotes);
-    if (sortTab === 'trending') return b.views - a.views;
-    return 0;
+    if (sortTab === 'top') {
+      return getDisplayedUpvotes(b.id, b.upvotes) - getDisplayedUpvotes(a.id, a.upvotes);
+    }
+    if (sortTab === 'trending') {
+      return (b.replies + b.views) - (a.replies + a.views);
+    }
+    return 0; // По подразбиране 'latest'
   });
 
+  const getCategoryCount = (catName: string) => {
+    return forumPosts.filter(p => p.category.toLowerCase() === catName.toLowerCase()).length;
+  };
+
   return (
-    <div className="forum-page-layout">
-      <aside className="forum-sidebar">
-        <button className="btn-primary create-post-btn" onClick={() => navigate('/create-post')}>
-          + Create New Post
+    <div className="forum-page-layout animate-fade">
+      <aside className="forum-sidebar-left">
+        <button className="create-new-thread-cta" onClick={() => navigate('/create-post')}>
+          <span>➕</span> Create New Thread
         </button>
-        <div className="sidebar-menu-wrapper">
-          <h3>Feed Filters</h3>
-          <button className={`sidebar-link ${forumFilter === 'all' ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
-            const next = new URLSearchParams(prev);
-            next.delete('category');
-            return next;
-          })}>🌐 All Discussions</button>
-          <button className={`sidebar-link ${forumFilter === 'popular' ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
-            const next = new URLSearchParams(prev);
-            next.set('category', 'popular');
-            return next;
-          })}>🔥 Popular Threads</button>
-          <button className={`sidebar-link ${forumFilter === 'unanswered' ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
-            const next = new URLSearchParams(prev);
-            next.set('category', 'unanswered');
-            return next;
-          })}>❔ Unanswered</button>
-        </div>
-        <div className="sidebar-menu-wrapper">
-          <h3>Categories</h3>
+
+        <div className="forum-sidebar-nav-panel">
+          <button 
+            className={`sidebar-nav-btn ${forumFilter === 'all' ? 'active-filter-sidebar' : ''}`}
+            onClick={() => setSearchParams(searchQuery ? { category: 'all', search: searchQuery } : { category: 'all' })}
+          >
+            <span>🌍 All Subjects</span>
+            <span className="sidebar-count-bubble">{forumPosts.length}</span>
+          </button>
+
           {categories.map(cat => (
-            <button key={cat} className={`sidebar-link ${forumFilter.toLowerCase() === cat.toLowerCase() ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
-                const next = new URLSearchParams(prev);
-                next.set('category', cat);
-                return next;
-              })}>📚 {cat}</button>
+            <button
+              key={cat}
+              className={`sidebar-nav-btn ${forumFilter.toLowerCase() === cat.toLowerCase() ? 'active-filter-sidebar' : ''}`}
+              onClick={() => setSearchParams(searchQuery ? { category: cat.toLowerCase(), search: searchQuery } : { category: cat.toLowerCase() })}
+            >
+              <span>📚 {cat}</span>
+              <span className="sidebar-count-bubble">{getCategoryCount(cat)}</span>
+            </button>
           ))}
         </div>
       </aside>
 
       <div className="forum-main-content-area">
-        {/* НОВАТА ИНТЕГРИРАНА ТЪРСАЧКА ВЪВ ФОРУМА */}
-        <div className="forum-search-container" style={{ marginBottom: '1rem' }}>
-          <input 
-            type="text" 
-            className="forum-search-input"
-            placeholder="🔍 Search posts by title, description or #tags..." 
-            value={forumSearch}
-            onChange={(e) => {
-              // Синхронизираме URL адреса при писане, за да се запазва състоянието
-              setSearchParams(prev => {
-                const next = new URLSearchParams(prev);
-                if (e.target.value) next.set('search', e.target.value);
-                else next.delete('search');
-                return next;
-              });
-            }}
-            style={{
-              width: '100%',
-              padding: '0.75rem 1.25rem',
-              fontSize: '1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              outline: 'none',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-            }}
-          />
-        </div>
-
         <div className="forum-sort-header-tabs">
-          <button className={`sort-tab-btn ${sortTab === 'latest' ? 'active-sort-tab' : ''}`} onClick={() => setSortTab('latest')}>Newest</button>
+          <button className={`sort-tab-btn ${sortTab === 'latest' ? 'active-sort-tab' : ''}`} onClick={() => setSortTab('latest')}>Latest</button>
           <button className={`sort-tab-btn ${sortTab === 'top' ? 'active-sort-tab' : ''}`} onClick={() => setSortTab('top')}>Top Voted</button>
           <button className={`sort-tab-btn ${sortTab === 'trending' ? 'active-sort-tab' : ''}`} onClick={() => setSortTab('trending')}>Trending</button>
         </div>
 
-        <div className="forum-threads-list-stream">
+        {searchQuery && (
+          <div style={{ color: '#64748b', fontSize: '0.95rem' }}>
+            Showing results for: <strong>"{searchQuery}"</strong> 
+            <span style={{ color: '#0070f3', cursor: 'pointer', marginLeft: '0.5rem' }} onClick={() => setSearchParams(forumFilter !== 'all' ? { category: forumFilter } : {})}>[Clear Search]</span>
+          </div>
+        )}
+
+        <div className="forum-posts-feed-list">
           {sortedPosts.length === 0 ? (
-            <div className="empty-forum-state" style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748b' }}>
-              <h3>No results matched your search criteria</h3>
-              <p>Try searching for alternative keywords or clear the search input.</p>
+            <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #eaeaea', color: '#64748b' }}>
+              No threads found matching the selection. Be the first to create one!
             </div>
           ) : (
             sortedPosts.map(post => {
               const userVoteStatus = votesRecord[post.id];
               return (
-                <div key={post.id} className="forum-post-row-card interactive-row" onClick={() => navigate(`/post/${post.id}`)}>
-                  <div className="post-voting-sidebar-block">
+                <div key={post.id} className="forum-post-row-item" onClick={() => navigate(`/post/${post.id}`)}>
+                  <div className="post-vote-sidebar-col">
                     <button className={`vote-btn ${userVoteStatus === 'up' ? 'active-upvote' : ''}`} onClick={(e) => handleVote(post.id, 'up', e)}>▲</button>
                     <span className={`vote-count ${userVoteStatus ? 'voted-count' : ''}`}>{getDisplayedUpvotes(post.id, post.upvotes)}</span>
                     <button className={`vote-btn ${userVoteStatus === 'down' ? 'active-downvote' : ''}`} onClick={(e) => handleVote(post.id, 'down', e)}>▼</button>

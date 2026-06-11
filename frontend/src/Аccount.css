@@ -1,0 +1,109 @@
+.account-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  min-height: 70vh;
+}
+
+.account-card {
+  background-color: #fff;
+  width: 100%;
+  max-width: 600px;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eaeaea;
+}
+
+.account-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.profile-avatar {
+  font-size: 3.5rem;
+  background-color: #eff6ff;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 1rem auto;
+  border: 2px solid #0070f3;
+}
+
+.account-card h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.8rem;
+  color: #111;
+}
+
+.account-subtitle {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.form-group-row .form-group {
+  flex: 1;
+}
+
+.account-form select {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  width: 100%;
+  font-family: inherit;
+  background-color: #f3f4f6;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.account-form input:disabled {
+  background-color: #f3f4f6;
+  color: #666;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.input-hint {
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid #eaeaea;
+  padding-top: 1.5rem;
+}
+
+/* Адаптивност за малки екрани */
+@media (max-width: 480px) {
+  .form-group-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .account-card {
+    padding: 1.5rem;
+  }
+}

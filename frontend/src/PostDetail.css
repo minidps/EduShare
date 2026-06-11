@@ -1,4 +1,4 @@
-/* ==========================================================================
+/* ==========================================================================\
    DEDICATED POST DETAILED DISCUSSION STREAM THREAD STYLES
    ========================================================================== */
 
@@ -12,18 +12,22 @@
 
 .back-feed-btn {
   background: none;
-  border: none;
+  border: 1px solid transparent;
   color: #0070f3;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
   text-align: left;
   align-self: flex-start;
-  padding: 0.25rem 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 .back-feed-btn:hover {
-  text-decoration: underline;
+  background-color: #eff6ff;
+  border-color: #0070f3;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.1);
 }
 
 .thread-main-container {
@@ -48,61 +52,52 @@
 }
 
 .thread-title {
+  margin: 0 0 1rem 0;
   font-size: 1.75rem;
   color: #0f172a;
-  margin: 0 0 1.25rem 0;
-  line-height: 1.3;
-}
-
-.thread-author-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-.thread-author-bar .sub-text {
-  font-size: 0.8rem;
-  color: #64748b;
 }
 
 .thread-body-description {
-  font-size: 1.05rem;
   color: #334155;
+  font-size: 1.05rem;
   line-height: 1.6;
   margin-bottom: 1.5rem;
 }
 
-.thread-attachment-box {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
+.thread-voting-actions {
   display: flex;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1.25rem;
 }
 
-.attachment-link-file {
+/* Специфични ховър ефекти за бутоните за гласуване в детайлите */
+.thread-voting-actions .btn-secondary {
+  padding: 0.5rem 1rem;
+  border: 1px solid #0070f3;
+  border-radius: 4px;
+  background: none;
   color: #0070f3;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.attachment-link-file:hover {
-  text-decoration: underline;
-}
-
-.thread-stats-footer {
-  display: flex;
-  gap: 1.5rem;
-  font-size: 0.85rem;
-  color: #64748b;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.thread-voting-actions .btn-secondary:hover {
+  background-color: #0070f3;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.2);
+}
+
+.thread-voting-actions .active-upvote {
+  background-color: #0070f3 !important;
+  color: #fff !important;
+}
+
+.thread-voting-actions .active-downvote {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #fff !important;
 }
 
 /* Replies Stream Timelines */
@@ -152,30 +147,22 @@
   margin: 0;
   color: #334155;
   font-size: 0.95rem;
-  line-height: 1.5;
 }
 
-/* Reply Input Form Blocks */
 .add-reply-form-node {
-  background-color: #fff;
-  border: 1px solid #eaeaea;
-  padding: 1.5rem;
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-}
-
-.add-reply-form-node label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1e293b;
+  gap: 1rem;
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
 }
 
 .add-reply-form-node textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #ccc;
   border-radius: 6px;
   font-family: inherit;
   font-size: 0.95rem;
@@ -189,7 +176,18 @@
 
 .submit-reply-btn {
   align-self: flex-end;
-  padding: 0.6rem 1.5rem;
-  font-size: 0.9rem;
+  padding: 0.6rem 1.25rem;
+  background-color: #0070f3;
+  border: 1px solid #0070f3;
+  color: #fff;
   font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submit-reply-btn:hover {
+  background-color: #0051b3;
+  border-color: #0051b3;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.3);
 }

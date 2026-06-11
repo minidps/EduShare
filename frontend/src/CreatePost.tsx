@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import './CreatePost.css';
@@ -17,13 +17,26 @@ interface CreatePostProps {
 
 export default function CreatePost({ categories, onPublish, onCancel }: CreatePostProps) {
   const [title, setTitle] = useState('');
-  useEffect(() => {
-    document.title = "Create Post";
-  }, []);
   const [category, setCategory] = useState(categories[0] || 'Mathematics');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    document.title = "Create Post";
+  }, []);
+
+  // Затваряне на падащото меню при клик извън него
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const tagCatalog = ['Help', 'ExamReview', 'Notes', 'Homework', 'SAT', 'Coding', 'JS', 'React'];
 
@@ -46,40 +59,69 @@ export default function CreatePost({ categories, onPublish, onCancel }: CreatePo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onPublish({ title, category, tags: selectedTags, description, fileName: null });
+    if (!title.trim()) {
+      alert('Please enter a title');
+      return;
+    }
+    onPublish({
+      title: title.trim(),
+      category,
+      tags: selectedTags,
+      description,
+      fileName: null
+    });
   };
 
   return (
-    <div className="create-post-container">
+    <div className="create-post-container animate-fade">
       <div className="create-post-header">
-        <h2>Create a Discussion Thread</h2>
+        <h2>Create a New Discussion Thread</h2>
+        <p>Share questions, revision materials, or resources with the community.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="create-post-form">
         <div className="form-group">
-          <label htmlFor="post-title">Discussion Title</label>
-          <input type="text" id="post-title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          <label htmlFor="post-title">Thread Title</label>
+          <input 
+            type="text" 
+            id="post-title" 
+            placeholder="Be descriptive. E.g., Help needed with organic chemistry mechanisms..." 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)} 
+            required 
+          />
         </div>
 
         <div className="form-row">
           <div className="form-group flex-1">
-            <label htmlFor="post-category">Subject Core Category</label>
-            <select id="post-category" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <label htmlFor="post-category">Category / Subject</label>
+            <select 
+              id="post-category" 
+              value={category} 
+              onChange={(e) => setCategory(e.target.value)}
+            >
               {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
 
-          <div className="form-group flex-1" style={{ position: 'relative' }}>
+          <div className="form-group flex-1" style={{ position: 'relative' }} ref={dropdownRef}>
             <label>Topic Sub-Tags</label>
             <div className="custom-multiselect-trigger" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-              {selectedTags.length === 0 ? 'Select tags...' : `${selectedTags.length} tags selected`}
+              {selectedTags.length === 0 
+                ? 'Select tags...' 
+                : selectedTags.map(t => `#${t}`).join(', ')
+              }
             </div>
 
             {isDropdownOpen && (
               <div className="multiselect-dropdown-box">
                 {tagCatalog.map(tag => (
                   <div key={tag} className="dropdown-tag-row" onClick={() => toggleTag(tag)}>
-                    <input type="checkbox" checked={selectedTags.includes(tag)} readOnly />
+                    <input 
+                      type="checkbox" 
+                      checked={selectedTags.includes(tag)} 
+                      onChange={() => {}} // Поддържа се контролиран през родителския onClick
+                    />
                     <span>#{tag}</span>
                   </div>
                 ))}

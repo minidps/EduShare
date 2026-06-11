@@ -33,81 +33,80 @@ interface PostDetailProps {
 }
 
 export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCount }: PostDetailProps) {
-  const { id } = useParams<{ id: string }>(); // Вземане на ID-то директно от URL адреса
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState('');
   
   const post = forumPosts.find(p => p.id === id);
-  const currentVote = id ? userVotes[id] ?? null : null;
-  const displayedUpvotes = post ? post.upvotes + (currentVote === 'up' ? 1 : currentVote === 'down' ? -1 : 0) : 0;
-
-  const handleVote = async (type: 'up' | 'down') => {
-    if (!post) return;
-    await onVote(post.id, type);
-  };
+  const currentVote = id ? userVotes[id] : null;
 
   const [replies, setReplies] = useState<Reply[]>([
-    { id: '1', author: 'StudyGuru99', avatar: '🦉', text: 'Thanks for bringing this up!', timeAgo: '1 hour ago' },
+    { id: '1', author: 'AlgeBrah', avatar: '🧙‍♂️', text: 'Closures are amazing once you get the hang of them. Think of it as a backpack that a function carries around everywhere!', timeAgo: '1 hour ago' },
+    { id: '2', author: 'CodeNewbie', avatar: '👨‍💻', text: 'Ah, that backpack analogy makes so much sense! Thanks!', timeAgo: '45 mins ago' }
   ]);
 
   if (!post) {
     return (
       <div className="post-detail-layout" style={{ textAlign: 'center', padding: '3rem' }}>
         <h2>Post not found</h2>
-        <button className="btn-primary" onClick={() => navigate('/forum')}>Return to Forum</button>
+        <button className="btn-primary" onClick={() => navigate('/forum')}>Back to Forum</button>
       </div>
     );
   }
 
+  const handleVote = async (type: 'up' | 'down') => {
+    await onVote(post.id, type);
+  };
+
   const handleReplySubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!commentText.trim()) return;
+
     const newReply: Reply = {
       id: String(replies.length + 1),
-      author: 'CurrentStudent',
-      avatar: '🦊',
-      text: commentText,
+      author: 'CurrentUser',
+      avatar: '🎓',
+      text: commentText.trim(),
       timeAgo: 'Just now'
     };
 
     setReplies([...replies, newReply]);
-    onAddReplyCount(post.id);
     setCommentText('');
+    onAddReplyCount(post.id);
   };
 
   return (
-    <div className="post-detail-layout">
-      <button className="back-feed-btn" onClick={() => navigate('/forum')}>
-        &larr; Back to Discussion Feed
-      </button>
+    <div className="post-detail-layout animate-fade">
+      <button className="back-feed-btn" onClick={() => navigate(-1)}>&larr; Back to Feed</button>
 
       <div className="thread-main-container">
         <article className="thread-header-card">
           <div className="thread-meta-top">
             <span className="post-category-tag">{post.category}</span>
-            <div className="tags-wrapper">{post.tags.map(tag => <span key={tag} className="hash-tag">#{tag}</span>)}</div>
+            <span className="reply-time">{post.timeAgo}</span>
           </div>
 
-          <h2 className="thread-title-main">{post.title}</h2>
+          <h2 className="thread-title">{post.title}</h2>
 
-          <div className="thread-author-profile-bar">
+          <div className="post-author-footer" style={{ marginBottom: '1.5rem' }}>
             <span className="author-avatar">{post.avatar}</span>
-            <div className="author-profile-details">
-              <strong>{post.author}</strong>
-              <span className="time-posted">Published {post.timeAgo}</span>
-            </div>
+            <span className="author-name">{post.author}</span>
           </div>
 
-          <div className="thread-body-text-content" dangerouslySetInnerHTML={{ __html: post.description || '' }} />
-
-          <div className="thread-footer-metrics">
-            <span className="metric-badge">▲ {displayedUpvotes} Upvotes</span>
-            <span className="metric-badge">💬 {post.replies + replies.length - 1} Replies</span>
+          <div className="thread-body-description">
+            {post.description || "No description provided."}
           </div>
 
-          <div className="thread-vote-actions" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+          <div className="post-tags-container" style={{ marginBottom: '1.5rem' }}>
+            {post.tags.map(tag => <span key={tag} className="hash-tag">#{tag}</span>)}
+          </div>
+
+          <div className="thread-voting-actions">
+            {/* Оправени кавички на атрибута type тук: */}
             <button className={`btn-secondary ${currentVote === 'up' ? 'active-upvote' : ''}`} type="button" onClick={() => handleVote('up')}>
               ▲ Upvote
             </button>
+            {/* Оправени кавички на атрибута type тук: */}
             <button className={`btn-secondary ${currentVote === 'down' ? 'active-downvote' : ''}`} type="button" onClick={() => handleVote('down')}>
               ▼ Downvote
             </button>
@@ -133,7 +132,7 @@ export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCo
 
           <form onSubmit={handleReplySubmit} className="add-reply-form-node">
             <textarea rows={3} placeholder="Write a response..." value={commentText} onChange={(e) => setCommentText(e.target.value)} required />
-            <button type="submit" className="btn-primary submit-reply-btn">Post Reply</button>
+            <button type="submit" className="submit-reply-btn">Post Reply</button>
           </form>
         </section>
       </div>
