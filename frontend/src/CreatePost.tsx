@@ -27,7 +27,6 @@ export default function CreatePost({ categories, onPublish, onCancel }: CreatePo
     document.title = "Create Post";
   }, []);
 
-  // Затваряне на падащото меню при клик извън него
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -120,7 +119,7 @@ export default function CreatePost({ categories, onPublish, onCancel }: CreatePo
                     <input 
                       type="checkbox" 
                       checked={selectedTags.includes(tag)} 
-                      onChange={() => {}} // Поддържа се контролиран през родителския onClick
+                      onChange={() => {}}
                     />
                     <span>#{tag}</span>
                   </div>

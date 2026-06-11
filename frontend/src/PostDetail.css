@@ -110,7 +110,6 @@
   font-weight: 500;
 }
 
-/* Долна лента с бутони за гласуване и докладване */
 .thread-action-bar {
   display: flex;
   justify-content: space-between;
@@ -158,7 +157,6 @@
   color: #1e293b;
 }
 
-/* НОВ И СТАБИЛЕН СТИЛ ЗА РЕПОРТ БУТОНА НА ПОСТА */
 .btn-report-action {
   background-color: transparent;
   color: #64748b;
@@ -180,7 +178,6 @@
   border-color: #fca5a5;
 }
 
-/* Секция с отговори */
 .replies-section-wrapper {
   display: flex;
   flex-direction: column;
@@ -210,7 +207,6 @@
   transition: border-color 0.2s;
 }
 
-/* Маркиране на закрепен коментар */
 .reply-node-card.pinned-reply-border {
   border-left: 4px solid #52b788;
   background-color: #fcfdfc;
@@ -265,7 +261,6 @@
   line-height: 1.5;
 }
 
-/* Долна част на коментара с действия */
 .reply-actions-footer {
   display: flex;
   gap: 0.75rem;
@@ -300,17 +295,15 @@
   color: #1b4332;
 }
 
-/* СТИЛ ЗА РЕПОРТ БУТОНА НА КОМЕНТАРИТЕ */
 .reply-action-btn.report-toggle-btn {
-  color: #94a3b8; /* Дискретно сиво в началото */
+  color: #94a3b8;
 }
 
 .reply-action-btn.report-toggle-btn:hover {
-  color: #ef4444; /* Става червено при посочване */
+  color: #ef4444;
   background-color: #fef2f2;
 }
 
-/* Форма за писане на нов коментар */
 .add-reply-form-node {
   background-color: #fff;
   border: 1px solid #e2e8f0;

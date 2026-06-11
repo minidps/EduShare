@@ -1,7 +1,3 @@
-/* ==========================================================================\
-   EXTENDED DEDICATED FORUM PAGE STYLINGS
-   ========================================================================== */
-
 .forum-page-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -45,7 +41,6 @@
   color: #fff;
 }
 
-/* Sidebar Stream filters */
 .forum-sidebar-nav-panel {
   display: flex;
   flex-direction: column;
@@ -127,7 +122,6 @@
   box-shadow: 0 4px 12px rgba(0, 112, 243, 0.3);
 }
 
-/* Feed List Core Structure */
 .forum-posts-feed-list {
   display: flex;
   flex-direction: column;
@@ -151,7 +145,6 @@
   box-shadow: 0 4px 12px rgba(0, 112, 243, 0.1);
 }
 
-/* Vote Column Styles */
 .post-vote-sidebar-col {
   display: flex;
   flex-direction: column;
@@ -199,7 +192,6 @@
   font-weight: 800;
 }
 
-/* Center Content Core */
 .post-main-content {
   flex-grow: 1;
 }

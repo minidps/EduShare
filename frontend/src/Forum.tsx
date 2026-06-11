@@ -50,7 +50,6 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     await onVote(postId, type);
   };
 
-  // Филтриране по категория и търсене
   const filteredPosts = forumPosts.filter(post => {
     const matchesCategory = forumFilter === 'all' || post.category.toLowerCase() === forumFilter.toLowerCase();
     const matchesSearch = searchQuery === '' || 
@@ -59,7 +58,6 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     return matchesCategory && matchesSearch;
   });
 
-  // Сортиране по табове
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     if (sortTab === 'top') {
       return getDisplayedUpvotes(b.id, b.upvotes) - getDisplayedUpvotes(a.id, a.upvotes);
@@ -67,7 +65,7 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     if (sortTab === 'trending') {
       return (b.replies + b.views) - (a.replies + a.views);
     }
-    return 0; // По подразбиране 'latest'
+    return 0;
   });
 
   const getCategoryCount = (catName: string) => {
