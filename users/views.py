@@ -1,19 +1,21 @@
+from typing import Any, Dict, List
+from datetime import datetime, timezone
+
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.db.models import F
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.request import Request
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import UserProfile, Grade, Subject, PostVote
-from django.db.models import F
-from datetime import datetime, timedelta
+from .models import UserProfile, Grade, Subject, PostVote, Post
 
 
-def serialize_grades(user):
+def serialize_grades(user: User) -> List[Dict[str, Any]]:
     return [
         {
             "subject": g.subject.name,
@@ -23,7 +25,7 @@ def serialize_grades(user):
     ]
 
 
-def serialize_votes(user):
+def serialize_votes(user: User) -> List[Dict[str, str]]:
     return [
         {
             "post_id": vote.post_id,
@@ -33,154 +35,71 @@ def serialize_votes(user):
     ]
 
 
-def get_user_grade(user):
-    profile = UserProfile.objects.filter(user=user).first()
+def get_user_grade(user: User) -> str:
+    profile: UserProfile | None = UserProfile.objects.filter(user=user).first()
     return profile.grade if profile else ''
 
 
 @api_view(['POST'])
-def register(request):
-    username = request.data.get('username')
-    email = request.data.get('email')
-    password = request.data.get('password')
-    grade = request.data.get('grade')
+def register(request: Request) -> Response:
+    username: str | None = request.data.get('username')
+    email: str | None = request.data.get('email')
+    password: str | None = request.data.get('password')
+    grade: str | None = request.data.get('grade')
 
     if not username or not email or not password or not grade:
-        return Response(
-            {"error": "Username, email, password and grade are required"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
     if User.objects.filter(username=username).exists():
-        return Response({"error": "Username already exists"}, status=400)
+        return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
     if User.objects.filter(email=email).exists():
-        return Response({"error": "Email already exists"}, status=400)
+        return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        password=password
-    )
-
+    user: User = User.objects.create_user(username=username, email=email, password=password)
     UserProfile.objects.create(user=user, grade=grade)
 
-    refresh = RefreshToken.for_user(user)
+    refresh: RefreshToken = RefreshToken.for_user(user)
 
     return Response({
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "grade": grade,
-        "votes": [],
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
-    }, status=201)
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'username': user.username,
+        'grade': grade
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
-def login_view(request):
-    identifier = request.data.get('username') or request.data.get('email')
-    password = request.data.get('password')
+def login_view(request: Request) -> Response:
+    username_or_email: str | None = request.data.get('username') or request.data.get('email')
+    password: str | None = request.data.get('password')
 
-    if not identifier or not password:
-        return Response(
-            {"error": "Email/username and password are required"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    if not username_or_email or not password:
+        return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = None
-    if '@' in identifier:
-        try:
-            user = User.objects.get(email=identifier)
-        except User.DoesNotExist:
-            user = None
-        if user and not user.check_password(password):
-            user = None
+    user: User | None = None
+    if '@' in username_or_email:
+        user = User.objects.filter(email=username_or_email).first()
     else:
-        user = authenticate(username=identifier, password=password)
+        user = User.objects.filter(username=username_or_email).first()
 
-    if user is None:
-        return Response(
-            {"error": "Invalid credentials"},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+    if user and user.check_password(password):
+        refresh: RefreshToken = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'username': user.username,
+            'grade': get_user_grade(user)
+        }, status=status.HTTP_200_OK)
 
-    refresh = RefreshToken.for_user(user)
-
-    return Response({
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "grade": get_user_grade(user),
-        "grades": serialize_grades(user),
-        "votes": serialize_votes(user),
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
-    }, status=200)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def add_grade(request):
-    subject_id = request.data.get("subject_id")
-    value = request.data.get("value")
-
-    if not subject_id or value is None:
-        return Response(
-            {"error": "subject_id and value are required"},
-            status=400
-        )
-
-    try:
-        value = int(value)
-    except:
-        return Response({"error": "value must be a number"}, status=400)
-
-    try:
-        subject = Subject.objects.get(id=subject_id)
-    except Subject.DoesNotExist:
-        return Response({"error": "Subject not found"}, status=404)
-
-    Grade.objects.create(
-        user=request.user,
-        subject=subject,
-        value=value
-    )
-
-    return Response({"message": "Grade saved"}, status=201)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def vote_post(request):
-    post_id = request.data.get('post_id')
-    value = request.data.get('value')
-
-    if not post_id or value not in ('up', 'down', 'none'):
-        return Response({"error": "post_id and value (up, down, none) are required"}, status=400)
-
-    if value == 'none':
-        PostVote.objects.filter(user=request.user, post_id=post_id).delete()
-        return Response({"post_id": post_id, "value": None}, status=200)
-
-    vote_value = PostVote.UPVOTE if value == 'up' else PostVote.DOWNVOTE
-    vote, created = PostVote.objects.get_or_create(
-        user=request.user,
-        post_id=post_id,
-        defaults={"value": vote_value}
-    )
-    if not created:
-        vote.value = vote_value
-        vote.save()
-
-    return Response({"post_id": post_id, "value": 'up' if vote_value == PostVote.UPVOTE else 'down'}, status=200)
+    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_current_user(request):
-    user = request.user
+def get_current_user(request: Request) -> Response:
+    user: User = request.user
+    refresh: RefreshToken = RefreshToken.for_user(user)
 
     return Response({
         "id": user.id,
@@ -191,42 +110,105 @@ def get_current_user(request):
         "votes": serialize_votes(user),
         "access": str(refresh.access_token),
         "refresh": str(refresh),
-    }, status=200)
+    }, status=status.HTTP_200_OK)
 
-def get_time_ago(created_at):
-    from datetime import datetime
-    now = datetime.now(created_at.tzinfo) if created_at.tzinfo else datetime.now()
-    diff = now - created_at
-    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_grade(request: Request) -> Response:
+    user: User = request.user
+    subject_id: Any = request.data.get('subject_id')
+    value: Any = request.data.get('value')
+
+    if not subject_id or value is None:
+        return Response({'error': 'subject_id and value are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        subject: Subject = Subject.objects.get(id=subject_id)
+        grade_val: int = int(value)
+    except (Subject.DoesNotExist, ValueError):
+        return Response({'error': 'Invalid subject_id or grade value'}, status=status.HTTP_400_BAD_REQUEST)
+
+    Grade.objects.create(user=user, subject=subject, value=grade_val)
+    return Response({'success': 'Grade added successfully'}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def vote_post(request: Request) -> Response:
+    user: User = request.user
+    post_id: str | None = request.data.get('post_id')
+    vote_type: str | None = request.data.get('value')  # 'up', 'down', 'none'
+
+    if not post_id or not vote_type:
+        return Response({'error': 'post_id and value are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        post: Post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    existing_vote: PostVote | None = PostVote.objects.filter(user=user, post_id=post_id).first()
+
+    # Изчисляване на промените във вотовете (Реализиране на логиката в зависимост от предишния вот)
+    if vote_type == 'none':
+        if existing_vote:
+            if existing_vote.value == PostVote.UPVOTE:
+                post.upvotes = F('upvotes') - 1
+            else:
+                post.downvotes = F('downvotes') - 1
+            existing_vote.delete()
+    elif vote_type == 'up':
+        if existing_vote:
+            if existing_vote.value == PostVote.DOWNVOTE:
+                post.downvotes = F('downvotes') - 1
+                post.upvotes = F('upvotes') + 1
+                existing_vote.value = PostVote.UPVOTE
+                existing_vote.save()
+        else:
+            post.upvotes = F('upvotes') + 1
+            PostVote.objects.create(user=user, post_id=post_id, value=PostVote.UPVOTE)
+    elif vote_type == 'down':
+        if existing_vote:
+            if existing_vote.value == PostVote.UPVOTE:
+                post.upvotes = F('upvotes') - 1
+                post.downvotes = F('downvotes') + 1
+                existing_vote.value = PostVote.DOWNVOTE
+                existing_vote.save()
+        else:
+            post.downvotes = F('downvotes') + 1
+            PostVote.objects.create(user=user, post_id=post_id, value=PostVote.DOWNVOTE)
+
+    post.save()
+    return Response({'success': 'Vote updated successfully'}, status=status.HTTP_200_OK)
+
+
+def get_time_ago(dt: datetime) -> str:
+    if not dt:
+        return ""
+    now: datetime = datetime.now(timezone.utc)
+    diff = now - dt
+
     if diff.days > 0:
-        if diff.days == 1:
-            return '1 day ago'
-        return f'{diff.days} days ago'
-    
-    hours = diff.seconds // 3600
+        return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
+    hours: int = diff.seconds // 3600
     if hours > 0:
-        if hours == 1:
-            return '1 hour ago'
-        return f'{hours} hours ago'
-    
-    minutes = diff.seconds // 60
+        return f"{hours} hour{'s' if hours > 1 else ''} ago"
+    minutes: int = diff.seconds // 60
     if minutes > 0:
-        if minutes == 1:
-            return '1 minute ago'
-        return f'{minutes} minutes ago'
-    
-    return 'Just now'
+        return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+    return "Just now"
 
 
-def serialize_post(post):
+def serialize_post(post: Post) -> Dict[str, Any]:
     return {
         'id': str(post.id),
         'title': post.title,
         'author': post.author.username,
-        'avatar': '??',
+        'avatar': post.author.username[0].upper() if post.author.username else 'U',
         'replies': post.replies,
         'views': post.views,
-        'upvotes': post.upvotes - post.downvotes,
+        'upvotes': post.upvotes - post.downvotes,  # Нетен баланс
         'tags': post.tags if isinstance(post.tags, list) else [],
         'category': post.category,
         'timeAgo': get_time_ago(post.created_at),
@@ -235,37 +217,33 @@ def serialize_post(post):
     }
 
 
-# ... (rest of your views.py above stays the same)
-
 @api_view(['GET'])
-def get_posts(request):
-    from .models import Post
+def get_posts(request: Request) -> Response:
     try:
         posts = Post.objects.all().order_by('-created_at')
-        serialized = [serialize_post(post) for post in posts]
-        return Response(serialized, status=200)
+        serialized: List[Dict[str, Any]] = [serialize_post(post) for post in posts]
+        return Response(serialized, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# Move this block ALL THE WAY back to the left margin (no indentation)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_post(request):
-    from .models import Post
+def create_post(request: Request) -> Response:
     try:
-        title = request.data.get('title')
-        description = request.data.get('description')
-        category = request.data.get('category')
-        tags = request.data.get('tags', [])
-        fileName = request.data.get('fileName')
+        title: str | None = request.data.get('title')
+        description: str | None = request.data.get('description')
+        category: str | None = request.data.get('category')
+        tags: List[str] = request.data.get('tags', [])
+        fileName: str | None = request.data.get('fileName')
 
         if not title or not description or not category:
             return Response(
                 {'error': 'title, description, and category are required'},
-                status=400
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        post = Post.objects.create(
+        post: Post = Post.objects.create(
             title=title,
             description=description,
             category=category,
@@ -274,6 +252,6 @@ def create_post(request):
             author=request.user
         )
 
-        return Response(serialize_post(post), status=201)
+        return Response(serialize_post(post), status=status.HTTP_201_CREATED)
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
