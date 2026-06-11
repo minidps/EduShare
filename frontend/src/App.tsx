@@ -47,6 +47,9 @@ const initialForumPosts: ForumPost[] = [
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  useEffect(() => {
+      document.title = "EduShare";
+    }, []);
   
   const [searchQuery, setSearchQuery] = useState<string>(''); // Стейт за търсене на началната страница
   const [authMode, setAuthMode] = useState<AuthMode>('none');

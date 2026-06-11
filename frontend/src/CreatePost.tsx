@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import './CreatePost.css';
@@ -17,6 +17,9 @@ interface CreatePostProps {
 
 export default function CreatePost({ categories, onPublish, onCancel }: CreatePostProps) {
   const [title, setTitle] = useState('');
+  useEffect(() => {
+    document.title = "Create Post";
+  }, []);
   const [category, setCategory] = useState(categories[0] || 'Mathematics');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [description, setDescription] = useState('');
