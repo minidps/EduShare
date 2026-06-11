@@ -47,20 +47,8 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
 
   const handleVote = async (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
-<<<<<<< HEAD
     const success = await onVote(id, type);
     if (!success) return;
-
-    const currentVote = votesRecord[id];
-    const nextVote = currentVote === type ? null : type;
-
-    setVotesRecord(prev => ({
-      ...prev,
-      [id]: nextVote,
-    }));
-=======
-    onVote(id, type);
->>>>>>> 923617f (Fixed page title)
   };
 
   // Филтриране по табове/категории И по ключова дума от търсачката
