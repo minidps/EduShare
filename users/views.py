@@ -204,25 +204,22 @@ def get_time_ago(dt: datetime) -> str:
 
 
 def serialize_post(post: Post) -> Dict[str, Any]:
-    # Note: If F() objects were evaluated recently on this post instance, 
-    # we use standard subtraction safely by making sure the integers are fresh.
     try:
         upvotes_count = int(post.upvotes)
         downvotes_count = int(post.downvotes)
     except TypeError:
-        # Falls back gracefully or re-fetches field values if F() objects exist on instance
         post.refresh_from_db()
         upvotes_count = post.upvotes
         downvotes_count = post.downvotes
 
     return {
-        'id': int(post.id),  # Kept as Integer to match traditional primary key formats
+        'id': str(post.id),  # 🌟 CHANGE THIS FROM int(post.id) TO str(post.id)
         'title': post.title,
         'author': post.author.username,
         'avatar': post.author.username[0].upper() if post.author.username else 'U',
         'replies': post.replies,
         'views': post.views,
-        'upvotes': upvotes_count - downvotes_count,  # Net calculation
+        'upvotes': upvotes_count - downvotes_count,
         'tags': post.tags if isinstance(post.tags, list) else [],
         'category': post.category,
         'timeAgo': get_time_ago(post.created_at),
