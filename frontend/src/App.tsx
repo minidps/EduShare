@@ -269,8 +269,8 @@ export default function App() {
               </div>
             ) : (
               <>
-                <button onClick={() => setAuthMode('login')}>Log In</button>
-                <button onClick={() => setAuthMode('signup')}>Sign Up</button>
+                <button className="btn-login" onClick={() => setAuthMode('login')}>Log In</button>
+                <button className="btn-signup" onClick={() => setAuthMode('signup')}>Sign Up</button>
               </>
             )}
           </nav>
