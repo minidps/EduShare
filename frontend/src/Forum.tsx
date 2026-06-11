@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './Forum.css';
-import './App.css';
 
 interface ForumPost {
   id: string;

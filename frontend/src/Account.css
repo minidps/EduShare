@@ -97,7 +97,6 @@
   padding-top: 1.5rem;
 }
 
-/* Адаптивност за малки екрани */
 @media (max-width: 480px) {
   .form-group-row {
     flex-direction: column;
