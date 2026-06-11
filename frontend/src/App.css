@@ -5,13 +5,13 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #f4f7f5;
+  background-color: #f9f9f9;
 }
 
 .app-container {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #333;
-  background-color: #f4f7f5;
+  background-color: #f9f9f9;
   min-height: 100vh;
   transition: filter 0.25s ease-in-out;
 }
@@ -35,7 +35,7 @@ body {
 .logo {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #1b4332;
+  color: #0070f3;
 }
 
 .nav-links {
@@ -44,154 +44,239 @@ body {
   align-items: center;
 }
 
-.user-welcome {
-  font-size: 0.95rem;
-  color: #475569;
+.user-menu {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
-/* Global Buttons Style */
-.btn-primary {
-  background-color: #1b4332;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
+.user-display {
   font-weight: 600;
+  color: #0070f3;
+  padding: 0.5rem 0.75rem;
+  background-color: #eff6ff;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.user-display:hover {
+  background-color: #0070f3;
+  color: #fff;
+}
+
+.nav-link-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: color 0.2s;
+}
+
+.nav-link-btn:hover, .active-nav {
+  color: #0070f3;
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn-primary {
+  padding: 0.5rem 1rem;
+  border: 1px solid #0070f3;
+  border-radius: 4px;
+  background-color: #0070f3;
+  color: #fff;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #0051b3;
+  border-color: #0051b3;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.3);
+}
+
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  border: 1px solid #0070f3;
+  border-radius: 4px;
+  background: none;
+  color: #0070f3;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #0070f3;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.2);
+}
+
+/* Structure components */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Hero Section */
+.hero-section {
+  text-align: center;
+  padding: 4rem 1rem;
+  background-color: #fff;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+  color: #111;
+}
+
+.hero-section p {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0 0 2rem 0;
+}
+
+.search-form {
+  display: flex;
+  max-width: 600px;
+  margin: 0 auto 2rem auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.search-form input {
+  flex-grow: 1;
+  padding: 1rem;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.search-btn {
+  padding: 1rem 2rem;
+  border: none;
+  background-color: #0070f3;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
-.btn-primary:hover {
-  background-color: #52b788;
+.search-btn:hover {
+  background-color: #0051b3;
 }
 
-.btn-primary:disabled {
-  background-color: #94a3b8;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: transparent;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-secondary:hover {
-  background-color: #f8fafc;
-  border-color: #94a3b8;
-}
-
-/* Authentication Modal Windows */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
+.hero-ctas {
   display: flex;
   justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 1rem;
+  gap: 1rem;
 }
 
-.modal-container {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 440px;
-  padding: 2.5rem;
-  position: relative;
-}
-
-<<<<<<< HEAD
-.animate-slideUp {
-  animation: slideUp 0.25s ease-out;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.modal-close-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1.2rem;
-  background: none;
-  border: none;
-  font-size: 1.75rem;
-  color: #999;
-  cursor: pointer;
-}
-
-.modal-container h2 {
-  margin: 0 0 0.25rem 0;
-  text-align: center;
-  font-family: inherit;
-}
-
-.modal-subtitle {
-  text-align: center;
-  color: #666;
-  margin: 0 0 2rem 0;
-  font-size: 0.9rem;
-  font-family: inherit;
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.form-group label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #444;
-  font-family: inherit;
-}
-
-.form-group input,
-.form-group select {
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  outline: none;
-  width: 100%;
-  font-family: inherit;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #52b788;
-}
-
-.modal-submit-btn {
-  width: 100%;
-  padding: 0.85rem;
-  font-size: 1rem;
+.hero-ctas button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
   font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
-.modal-toggle-text {
+.cta-browse {
+  background-color: #e5e7eb;
+  color: #333;
+}
+
+.cta-browse:hover {
+  background-color: #0070f3;
+  border-color: #0070f3;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.3);
+}
+
+.cta-upload {
+  background-color: #10b981;
+  color: #fff;
+}
+
+.cta-upload:hover {
+  background-color: #0070f3;
+  border-color: #0070f3;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.3);
+}
+
+/* Categories Grid */
+.categories-section {
+  margin-bottom: 3rem;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.category-card {
+  padding: 1.5rem 1rem;
   text-align: center;
-  margin-top: 1.25rem;
-=======
+  background-color: #fff;
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+  border-color: #0070f3;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.1);
+}
+
+.category-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.category-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+/* Split Column Feed Dashboard */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.resources-list, .discussions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.resource-card, .discussion-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+}
+
 .resource-card.interactive-row {
   transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
   cursor: pointer;
@@ -273,15 +358,10 @@ body {
 .discussion-stats-line {
   display: flex;
   gap: 1rem;
->>>>>>> 89e1cf4a437f8ca55bb91a5f31329a240318d704
   font-size: 0.85rem;
   color: #777;
 }
 
-<<<<<<< HEAD
-.modal-toggle-text span {
-  color: #1b4332;
-=======
 /* Modals Overlay Base styling */
 .modal-overlay {
   position: fixed;
@@ -395,16 +475,12 @@ body {
 
 .modal-toggle-text span {
   color: #0070f3;
->>>>>>> 89e1cf4a437f8ca55bb91a5f31329a240318d704
   cursor: pointer;
   font-weight: 600;
 }
 
 .modal-toggle-text span:hover {
   text-decoration: underline;
-<<<<<<< HEAD
-  color: #52b788;
-=======
 }
 
 /* В началото на App.css */
@@ -459,27 +535,55 @@ body {
 
 .btn-login {
   background-color: transparent;
-  color: #0070f3;
-  border: 1px solid #0070f3;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
   margin-right: 0.5rem;
 }
 
 .btn-login:hover {
-  background-color: rgba(59, 131, 246, 0.895);
+  background-color: rgba(59, 130, 246, 0.08);
 }
 
 .btn-signup {
-  background-color: #0070f3;
+  background-color: #3b82f6;
   color: #ffffff;
   border: 1px solid transparent;
 }
 
 .btn-signup:hover {
-  background-color: #0070f3;
+  background-color: #2563eb;
   box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
 }
 
 .btn-login:active, .btn-signup:active {
   transform: scale(0.97);
->>>>>>> 89e1cf4a437f8ca55bb91a5f31329a240318d704
+}
+.view-all-forum-btn {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  margin-top: 1.5rem;
+  background-color: #f8fafc; /* Много лек сив/син фон */
+  color: #3b82f6; /* Син цвят за текста, съвпадащ с навигацията */
+  border: 1px dashed #cbd5e1; /* Прекъсната рамка */
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+}
+
+/* Ефекти при посочване (Hover) */
+.view-all-forum-btn:hover {
+  background-color: #3b82f6; /* Фонът става син */
+  color: #ffffff; /* Текстът става бял */
+  border-style: solid;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); /* Лек блясък/сянка */
+  letter-spacing: 0.5px; /* Леко раздалечаване на буквите за динамика */
+}
+
+.view-all-forum-btn:active {
+  transform: scale(0.98);
 }
