@@ -187,13 +187,12 @@ export default function App() {
     const nextVote = currentVote === voteType ? null : voteType;
     const voteValue = nextVote === null ? 'none' : nextVote;
 
-    setUserVotes(prev => ({
-      ...prev,
-      [postId]: nextVote,
-    }));
-
     try {
       await submitVote({ post_id: postId, value: voteValue });
+      setUserVotes(prev => ({
+        ...prev,
+        [postId]: nextVote,
+      }));
       return true;
     } catch (error) {
       console.error('Vote save failed', error);

@@ -28,7 +28,7 @@ interface ForumPost {
 interface PostDetailProps {
   forumPosts: ForumPost[];
   userVotes: Record<string, 'up' | 'down' | null>;
-  onVote: (postId: string, voteType: 'up' | 'down') => void;
+  onVote: (postId: string, voteType: 'up' | 'down') => Promise<boolean>;
   onAddReplyCount: (id: string) => void;
 }
 
@@ -41,9 +41,9 @@ export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCo
   const currentVote = id ? userVotes[id] ?? null : null;
   const displayedUpvotes = post ? post.upvotes + (currentVote === 'up' ? 1 : currentVote === 'down' ? -1 : 0) : 0;
 
-  const handleVote = (type: 'up' | 'down') => {
+  const handleVote = async (type: 'up' | 'down') => {
     if (!post) return;
-    onVote(post.id, type);
+    await onVote(post.id, type);
   };
 
   const [replies, setReplies] = useState<Reply[]>([
