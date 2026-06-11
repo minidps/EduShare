@@ -9,6 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserProfile, Grade, Subject, PostVote
+from django.db.models import F
+from datetime import datetime, timedelta
 
 
 def serialize_grades(user):
@@ -187,4 +189,89 @@ def get_current_user(request):
         "grade": get_user_grade(user),
         "grades": serialize_grades(user),
         "votes": serialize_votes(user),
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
     }, status=200)
+
+def get_time_ago(created_at):
+    from datetime import datetime
+    now = datetime.now(created_at.tzinfo) if created_at.tzinfo else datetime.now()
+    diff = now - created_at
+    
+    if diff.days > 0:
+        if diff.days == 1:
+            return '1 day ago'
+        return f'{diff.days} days ago'
+    
+    hours = diff.seconds // 3600
+    if hours > 0:
+        if hours == 1:
+            return '1 hour ago'
+        return f'{hours} hours ago'
+    
+    minutes = diff.seconds // 60
+    if minutes > 0:
+        if minutes == 1:
+            return '1 minute ago'
+        return f'{minutes} minutes ago'
+    
+    return 'Just now'
+
+
+def serialize_post(post):
+    return {
+        'id': str(post.id),
+        'title': post.title,
+        'author': post.author.username,
+        'avatar': '??',
+        'replies': post.replies,
+        'views': post.views,
+        'upvotes': post.upvotes - post.downvotes,
+        'tags': post.tags if isinstance(post.tags, list) else [],
+        'category': post.category,
+        'timeAgo': get_time_ago(post.created_at),
+        'description': post.description,
+        'fileName': post.fileName,
+    }
+
+
+@api_view(['GET'])
+def get_posts(request):
+    from .models import Post
+    try:
+        posts = Post.objects.all().order_by('-created_at')
+        serialized = [serialize_post(post) for post in posts]
+        return Response(serialized, status=200)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_post(request):
+    from .models import Post
+    try:
+        title = request.data.get('title')
+        description = request.data.get('description')
+        category = request.data.get('category')
+        tags = request.data.get('tags', [])
+        fileName = request.data.get('fileName')
+
+        if not title or not description or not category:
+            return Response(
+                {'error': 'title, description, and category are required'},
+                status=400
+            )
+
+        post = Post.objects.create(
+            title=title,
+            description=description,
+            category=category,
+            tags=tags,
+            fileName=fileName,
+            author=request.user
+        )
+
+        return Response(serialize_post(post), status=201)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

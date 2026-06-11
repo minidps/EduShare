@@ -29,3 +29,15 @@ export const getCurrentUser = () =>
 
 export const submitVote = (data: { post_id: string; value: 'up' | 'down' | 'none' }) =>
   api.post("/vote/", data);
+
+export const getPosts = () => {
+  return api.get('/posts/');
+};
+
+export const createPost = (data: any) => {
+  return api.post('/posts/create/', data, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+    },
+  });
+};
