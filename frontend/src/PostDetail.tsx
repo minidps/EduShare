@@ -8,6 +8,7 @@ interface Reply {
   avatar: string;
   text: string;
   timeAgo: string;
+  isPinned?: boolean;
 }
 
 interface ForumPost {
@@ -30,102 +31,175 @@ interface PostDetailProps {
   userVotes: Record<string, 'up' | 'down' | null>;
   onVote: (postId: string, voteType: 'up' | 'down') => Promise<boolean>;
   onAddReplyCount: (id: string) => void;
+  currentUser?: string | null;
 }
 
-export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCount }: PostDetailProps) {
-  const { id } = useParams<{ id: string }>(); // Вземане на ID-то директно от URL адреса
+export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCount, currentUser }: PostDetailProps) {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState('');
   
   const post = forumPosts.find(p => p.id === id);
-  const currentVote = id ? userVotes[id] ?? null : null;
-  const displayedUpvotes = post ? post.upvotes + (currentVote === 'up' ? 1 : currentVote === 'down' ? -1 : 0) : 0;
+  const currentVote = id ? userVotes[id] : null;
 
-  const handleVote = async (type: 'up' | 'down') => {
-    if (!post) return;
-    await onVote(post.id, type);
-  };
+  const activeUser = currentUser || (post ? post.author : 'dimi');
 
   const [replies, setReplies] = useState<Reply[]>([
-    { id: '1', author: 'StudyGuru99', avatar: '🦉', text: 'Thanks for bringing this up!', timeAgo: '1 hour ago' },
+    { id: '1', author: 'AlgeBrah', avatar: '🧙‍♂️', text: 'Closures are amazing once you get the hang of them.', timeAgo: '1 hour ago', isPinned: false },
+    { id: '2', author: 'CodeNewbie', avatar: '👨‍💻', text: 'Ah, that makes so much sense! Thanks!', timeAgo: '45 mins ago', isPinned: false }
   ]);
 
   if (!post) {
     return (
       <div className="post-detail-layout" style={{ textAlign: 'center', padding: '3rem' }}>
         <h2>Post not found</h2>
-        <button className="btn-primary" onClick={() => navigate('/forum')}>Return to Forum</button>
+        <button className="btn-primary" onClick={() => navigate('/forum')}>Back to Forum</button>
       </div>
     );
   }
 
+  const getDisplayedUpvotes = () => {
+    let base = post.upvotes;
+    if (currentVote === 'up') return base + 1;
+    if (currentVote === 'down') return base - 1;
+    return base;
+  };
+
+  const handleVote = async (type: 'up' | 'down') => {
+    await onVote(post.id, type);
+  };
+
   const handleReplySubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!commentText.trim()) return;
+
     const newReply: Reply = {
-      id: String(replies.length + 1),
-      author: 'CurrentStudent',
-      avatar: '🦊',
-      text: commentText,
-      timeAgo: 'Just now'
+      id: String(Date.now()),
+      author: activeUser,
+      avatar: '🎓',
+      text: commentText.trim(),
+      timeAgo: 'Just now',
+      isPinned: false
     };
 
     setReplies([...replies, newReply]);
-    onAddReplyCount(post.id);
     setCommentText('');
+    onAddReplyCount(post.id);
   };
 
+  const handleReportPost = () => {
+    const reason = prompt('Please enter the reason for reporting this post:');
+    if (reason?.trim()) alert('Thank you! This post has been reported.');
+  };
+
+  const handleReportReply = (replyId: string, author: string) => {
+    const reason = prompt(`Why are you reporting ${author}'s comment?`);
+    if (reason?.trim()) alert('Comment has been reported.');
+  };
+
+  const handleTogglePin = (replyId: string) => {
+    setReplies(prevReplies =>
+      prevReplies.map(reply => {
+        if (reply.id === replyId) {
+          return { ...reply, isPinned: !reply.isPinned };
+        }
+        return { ...reply, isPinned: false };
+      })
+    );
+  };
+
+  const isPostOwner = post.author === activeUser;
+
+  const sortedReplies = [...replies].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
+  });
+
   return (
-    <div className="post-detail-layout">
-      <button className="back-feed-btn" onClick={() => navigate('/forum')}>
-        &larr; Back to Discussion Feed
-      </button>
+    <div className="post-detail-layout animate-fade">
+      <button className="back-feed-btn" onClick={() => navigate(-1)}>&larr; Back to Feed</button>
 
       <div className="thread-main-container">
         <article className="thread-header-card">
           <div className="thread-meta-top">
             <span className="post-category-tag">{post.category}</span>
-            <div className="tags-wrapper">{post.tags.map(tag => <span key={tag} className="hash-tag">#{tag}</span>)}</div>
+            <span className="reply-time">{post.timeAgo}</span>
           </div>
 
-          <h2 className="thread-title-main">{post.title}</h2>
+          <h2 className="thread-title">{post.title}</h2>
 
-          <div className="thread-author-profile-bar">
+          <div className="post-author-footer" style={{ marginBottom: '1.5rem' }}>
             <span className="author-avatar">{post.avatar}</span>
-            <div className="author-profile-details">
-              <strong>{post.author}</strong>
-              <span className="time-posted">Published {post.timeAgo}</span>
+            <span className="author-name">{post.author}</span>
+            {isPostOwner && <span className="owner-badge">Author</span>}
+          </div>
+
+          <div 
+            className="thread-body-description ql-editor"
+            dangerouslySetInnerHTML={{ __html: post.description || "No description provided." }} 
+          />
+
+          <div className="post-tags-container" style={{ marginBottom: '1.5rem' }}>
+            {post.tags.map(tag => <span key={tag} className="hash-tag">#{tag}</span>)}
+          </div>
+
+          <div className="thread-action-bar">
+            <div className="thread-voting-actions">
+              <button className={`btn-secondary ${currentVote === 'up' ? 'active-upvote' : ''}`} type="button" onClick={() => handleVote('up')}>
+                ▲ Upvote
+              </button>
+              
+              <button className={`btn-secondary ${currentVote === 'down' ? 'active-downvote' : ''}`} type="button" onClick={() => handleVote('down')}>
+                ▼ Downvote
+              </button>
+
+              <span className="detail-vote-count-display">
+                {getDisplayedUpvotes()}
+              </span>
             </div>
-          </div>
-
-          <div className="thread-body-text-content" dangerouslySetInnerHTML={{ __html: post.description || '' }} />
-
-          <div className="thread-footer-metrics">
-            <span className="metric-badge">▲ {displayedUpvotes} Upvotes</span>
-            <span className="metric-badge">💬 {post.replies + replies.length - 1} Replies</span>
-          </div>
-
-          <div className="thread-vote-actions" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-            <button className={`btn-secondary ${currentVote === 'up' ? 'active-upvote' : ''}`} type="button" onClick={() => handleVote('up')}>
-              ▲ Upvote
-            </button>
-            <button className={`btn-secondary ${currentVote === 'down' ? 'active-downvote' : ''}`} type="button" onClick={() => handleVote('down')}>
-              ▼ Downvote
+            
+            <button className="btn-report-action" type="button" onClick={handleReportPost}>
+              🚩 Report Post
             </button>
           </div>
         </article>
 
         <section className="replies-section-wrapper">
-          <h3>Discussion Thread</h3>
+          <h3>Discussion Thread ({replies.length})</h3>
           <div className="replies-stream-box">
-            {replies.map(reply => (
-              <div key={reply.id} className="reply-node-card">
+            {sortedReplies.map(reply => (
+              <div key={reply.id} className={`reply-node-card ${reply.isPinned ? 'pinned-reply-border' : ''}`}>
                 <div className="reply-avatar-col">{reply.avatar}</div>
                 <div className="reply-content-col">
                   <div className="reply-meta-line">
-                    <strong>{reply.author}</strong>
+                    <div className="reply-user-info">
+                      <strong>{reply.author}</strong>
+                      {reply.isPinned && <span className="pinned-label-badge">📌 Pinned</span>}
+                    </div>
                     <span className="reply-time">{reply.timeAgo}</span>
                   </div>
                   <p className="reply-text-paragraph">{reply.text}</p>
+                  
+                  <div className="reply-actions-footer">
+                    {isPostOwner && (
+                      <button 
+                        type="button" 
+                        className={`reply-action-btn pin-toggle-btn ${reply.isPinned ? 'unpin-style' : ''}`}
+                        onClick={() => handleTogglePin(reply.id)}
+                      >
+                        {reply.isPinned ? '📍 Unpin' : '📌 Pin Comment'}
+                      </button>
+                    )}
+                    
+                    <button 
+                      type="button" 
+                      className="reply-action-btn report-toggle-btn"
+                      onClick={() => handleReportReply(reply.id, reply.author)}
+                    >
+                      🚩 Report
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -133,7 +207,7 @@ export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCo
 
           <form onSubmit={handleReplySubmit} className="add-reply-form-node">
             <textarea rows={3} placeholder="Write a response..." value={commentText} onChange={(e) => setCommentText(e.target.value)} required />
-            <button type="submit" className="btn-primary submit-reply-btn">Post Reply</button>
+            <button type="submit" className="submit-reply-btn">Post Reply</button>
           </form>
         </section>
       </div>
