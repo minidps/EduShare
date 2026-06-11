@@ -558,3 +558,32 @@ body {
 .btn-login:active, .btn-signup:active {
   transform: scale(0.97);
 }
+.view-all-forum-btn {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  margin-top: 1.5rem;
+  background-color: #f8fafc; /* Много лек сив/син фон */
+  color: #3b82f6; /* Син цвят за текста, съвпадащ с навигацията */
+  border: 1px dashed #cbd5e1; /* Прекъсната рамка */
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+}
+
+/* Ефекти при посочване (Hover) */
+.view-all-forum-btn:hover {
+  background-color: #3b82f6; /* Фонът става син */
+  color: #ffffff; /* Текстът става бял */
+  border-style: solid;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); /* Лек блясък/сянка */
+  letter-spacing: 0.5px; /* Леко раздалечаване на буквите за динамика */
+}
+
+.view-all-forum-btn:active {
+  transform: scale(0.98);
+}
