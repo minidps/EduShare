@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './Forum.css';
 
 interface ForumPost {
@@ -25,9 +25,27 @@ interface ForumProps {
 
 export default function Forum({ categories, forumPosts, setForumPosts }: ForumProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [forumFilter, setForumFilter] = useState<string>('all');
   const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
   const [votesRecord, setVotesRecord] = useState<Record<string, 'up' | 'down' | null>>({});
+  
+  // Локален стейт за търсене вътре във форума
+  const [forumSearch, setForumSearch] = useState<string>('');
+
+  // Четем параметрите от URL адреса при първоначално зареждане
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    const searchParam = searchParams.get('search');
+
+    if (categoryParam) {
+      setForumFilter(categoryParam);
+    }
+    if (searchParam) {
+      setForumSearch(searchParam);
+    }
+  }, [searchParams]);
 
   const handleVote = (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,11 +72,26 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
     }));
   };
 
+  // Филтриране по табове/категории И по ключова дума от търсачката
   const filteredPosts = forumPosts.filter(post => {
-    if (forumFilter === 'all') return true;
-    if (forumFilter === 'popular') return post.upvotes >= 15;
-    if (forumFilter === 'unanswered') return post.replies === 0;
-    return post.category === forumFilter;
+    // 1. Проверка на левите филтри/категории
+    let matchesCategory = true;
+    if (forumFilter === 'popular') matchesCategory = post.upvotes >= 15;
+    else if (forumFilter === 'unanswered') matchesCategory = post.replies === 0;
+    else if (forumFilter !== 'all') matchesCategory = post.category.toLowerCase() === forumFilter.toLowerCase();
+
+    // 2. Проверка на търсачката (за заглавие, описание или тагове)
+    let matchesSearch = true;
+    if (forumSearch.trim() !== '') {
+      const query = forumSearch.toLowerCase();
+      const inTitle = post.title.toLowerCase().includes(query);
+      const inDescription = post.description?.toLowerCase().includes(query) || false;
+      const inTags = post.tags.some(tag => tag.toLowerCase().includes(query));
+      
+      matchesSearch = inTitle || inDescription || inTags;
+    }
+
+    return matchesCategory && matchesSearch;
   });
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {
@@ -70,7 +103,6 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
   return (
     <div className="forum-page-layout">
       <aside className="forum-sidebar">
-        {/* Води до /create-post */}
         <button className="btn-primary create-post-btn" onClick={() => navigate('/create-post')}>
           + Create New Post
         </button>
@@ -83,12 +115,40 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
         <div className="sidebar-menu-wrapper">
           <h3>Categories</h3>
           {categories.map(cat => (
-            <button key={cat} className={`sidebar-link ${forumFilter === cat ? 'active-sidebar-link' : ''}`} onClick={() => setForumFilter(cat)}>📚 {cat}</button>
+            <button key={cat} className={`sidebar-link ${forumFilter.toLowerCase() === cat.toLowerCase() ? 'active-sidebar-link' : ''}`} onClick={() => setForumFilter(cat)}>📚 {cat}</button>
           ))}
         </div>
       </aside>
 
       <div className="forum-main-content-area">
+        {/* НОВАТА ИНТЕГРИРАНА ТЪРСАЧКА ВЪВ ФОРУМА */}
+        <div className="forum-search-container" style={{ marginBottom: '1rem' }}>
+          <input 
+            type="text" 
+            className="forum-search-input"
+            placeholder="🔍 Search posts by title, description or #tags..." 
+            value={forumSearch}
+            onChange={(e) => {
+              setForumSearch(e.target.value);
+              // Синхронизираме URL адреса при писане, за да се запазва състоянието
+              setSearchParams(prev => {
+                if (e.target.value) prev.set('search', e.target.value);
+                else prev.delete('search');
+                return prev;
+              });
+            }}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1.25rem',
+              fontSize: '1rem',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              outline: 'none',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            }}
+          />
+        </div>
+
         <div className="forum-sort-header-tabs">
           <button className={`sort-tab-btn ${sortTab === 'latest' ? 'active-sort-tab' : ''}`} onClick={() => setSortTab('latest')}>Newest</button>
           <button className={`sort-tab-btn ${sortTab === 'top' ? 'active-sort-tab' : ''}`} onClick={() => setSortTab('top')}>Top Voted</button>
@@ -97,14 +157,14 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
 
         <div className="forum-threads-list-stream">
           {sortedPosts.length === 0 ? (
-            <div className="empty-forum-state">
-              <h3>No threads found</h3>
+            <div className="empty-forum-state" style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748b' }}>
+              <h3>No results matched your search criteria</h3>
+              <p>Try searching for alternative keywords or clear the search input.</p>
             </div>
           ) : (
             sortedPosts.map(post => {
               const userVoteStatus = votesRecord[post.id];
               return (
-                /* Променя URL адреса на /post/идентификатор */
                 <div key={post.id} className="forum-post-row-card interactive-row" onClick={() => navigate(`/post/${post.id}`)}>
                   <div className="post-voting-sidebar-block">
                     <button className={`vote-btn ${userVoteStatus === 'up' ? 'active-upvote' : ''}`} onClick={(e) => handleVote(post.id, 'up', e)}>▲</button>
