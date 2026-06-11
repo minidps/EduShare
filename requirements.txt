@@ -1,0 +1,14 @@
+# Django Framework Core
+Django>=5.0,<6.0
+
+# API Development
+djangorestframework>=3.15.0,<3.16.0
+
+# CORS Configurations (за връзка с React фронтенда)
+django-cors-headers>=4.3.0,<4.4.0
+
+# JWT Authentication
+djangorestframework-simplejwt>=5.3.1,<5.4.0
+
+# Сигурност и работа с променливи на средата (по желание, но силно препоръчително)
+django-environ>=0.11.2
