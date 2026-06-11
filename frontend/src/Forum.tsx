@@ -27,17 +27,14 @@ interface ForumProps {
 export default function Forum({ categories, forumPosts, userVotes, onVote }: ForumProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-    useEffect(() => {
-    document.title = "Forum";
-  }, []);
-  
-  const [forumFilter, setForumFilter] = useState<string>('all');
-  const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
-  const [votesRecord, setVotesRecord] = useState<Record<string, 'up' | 'down' | null>>(userVotes);
-  
+
   useEffect(() => {
-    setVotesRecord(userVotes);
-  }, [userVotes]);
+    document.title = 'Forum';
+  }, []);
+
+  const forumFilter = searchParams.get('category') || 'all';
+  const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
+  const votesRecord = userVotes;
 
   const getDisplayedUpvotes = (postId: string, baseUpvotes: number) => {
     const vote = votesRecord[postId];
@@ -46,24 +43,11 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     return baseUpvotes;
   };
 
-  // Локален стейт за търсене вътре във форума
-  const [forumSearch, setForumSearch] = useState<string>('');
-
-  // Четем параметрите от URL адреса при първоначално зареждане
-  useEffect(() => {
-    const categoryParam = searchParams.get('category');
-    const searchParam = searchParams.get('search');
-
-    if (categoryParam) {
-      setForumFilter(categoryParam);
-    }
-    if (searchParam) {
-      setForumSearch(searchParam);
-    }
-  }, [searchParams]);
+  const forumSearch = searchParams.get('search') || '';
 
   const handleVote = async (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
+<<<<<<< HEAD
     const success = await onVote(id, type);
     if (!success) return;
 
@@ -74,6 +58,9 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
       ...prev,
       [id]: nextVote,
     }));
+=======
+    onVote(id, type);
+>>>>>>> 923617f (Fixed page title)
   };
 
   // Филтриране по табове/категории И по ключова дума от търсачката
@@ -112,14 +99,30 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
         </button>
         <div className="sidebar-menu-wrapper">
           <h3>Feed Filters</h3>
-          <button className={`sidebar-link ${forumFilter === 'all' ? 'active-sidebar-link' : ''}`} onClick={() => setForumFilter('all')}>🌐 All Discussions</button>
-          <button className={`sidebar-link ${forumFilter === 'popular' ? 'active-sidebar-link' : ''}`} onClick={() => setForumFilter('popular')}>🔥 Popular Threads</button>
-          <button className={`sidebar-link ${forumFilter === 'unanswered' ? 'active-sidebar-link' : ''}`} onClick={() => setForumFilter('unanswered')}>❔ Unanswered</button>
+          <button className={`sidebar-link ${forumFilter === 'all' ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.delete('category');
+            return next;
+          })}>🌐 All Discussions</button>
+          <button className={`sidebar-link ${forumFilter === 'popular' ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('category', 'popular');
+            return next;
+          })}>🔥 Popular Threads</button>
+          <button className={`sidebar-link ${forumFilter === 'unanswered' ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('category', 'unanswered');
+            return next;
+          })}>❔ Unanswered</button>
         </div>
         <div className="sidebar-menu-wrapper">
           <h3>Categories</h3>
           {categories.map(cat => (
-            <button key={cat} className={`sidebar-link ${forumFilter.toLowerCase() === cat.toLowerCase() ? 'active-sidebar-link' : ''}`} onClick={() => setForumFilter(cat)}>📚 {cat}</button>
+            <button key={cat} className={`sidebar-link ${forumFilter.toLowerCase() === cat.toLowerCase() ? 'active-sidebar-link' : ''}`} onClick={() => setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.set('category', cat);
+                return next;
+              })}>📚 {cat}</button>
           ))}
         </div>
       </aside>
@@ -133,12 +136,12 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
             placeholder="🔍 Search posts by title, description or #tags..." 
             value={forumSearch}
             onChange={(e) => {
-              setForumSearch(e.target.value);
               // Синхронизираме URL адреса при писане, за да се запазва състоянието
               setSearchParams(prev => {
-                if (e.target.value) prev.set('search', e.target.value);
-                else prev.delete('search');
-                return prev;
+                const next = new URLSearchParams(prev);
+                if (e.target.value) next.set('search', e.target.value);
+                else next.delete('search');
+                return next;
               });
             }}
             style={{

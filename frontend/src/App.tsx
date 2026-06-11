@@ -48,8 +48,20 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
-      document.title = "EduShare";
-    }, []);
+  const path = location.pathname;
+
+  if (path === '/') {
+    document.title = "Home";
+  } else if (path === '/forum') {
+    document.title = "Forum";
+  } else if (path === '/create-post') {
+    document.title = "Create Post";
+  } else if (path.startsWith('/post/')) {
+    document.title = "View Post";
+  } else {
+    document.title = "EduShare";
+  }
+}, [location.pathname]);
   
   const [searchQuery, setSearchQuery] = useState<string>(''); // Стейт за търсене на началната страница
   const [authMode, setAuthMode] = useState<AuthMode>('none');
