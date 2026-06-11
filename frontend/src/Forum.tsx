@@ -20,17 +20,29 @@ interface ForumPost {
 interface ForumProps {
   categories: string[];
   forumPosts: ForumPost[];
-  setForumPosts: React.Dispatch<React.SetStateAction<ForumPost[]>>;
+  userVotes: Record<string, 'up' | 'down' | null>;
+  onVote: (postId: string, voteType: 'up' | 'down') => void;
 }
 
-export default function Forum({ categories, forumPosts, setForumPosts }: ForumProps) {
+export default function Forum({ categories, forumPosts, userVotes, onVote }: ForumProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [forumFilter, setForumFilter] = useState<string>('all');
   const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
-  const [votesRecord, setVotesRecord] = useState<Record<string, 'up' | 'down' | null>>({});
+  const [votesRecord, setVotesRecord] = useState<Record<string, 'up' | 'down' | null>>(userVotes);
   
+  useEffect(() => {
+    setVotesRecord(userVotes);
+  }, [userVotes]);
+
+  const getDisplayedUpvotes = (postId: string, baseUpvotes: number) => {
+    const vote = votesRecord[postId];
+    if (vote === 'up') return baseUpvotes + 1;
+    if (vote === 'down') return baseUpvotes - 1;
+    return baseUpvotes;
+  };
+
   // Локален стейт за търсене вътре във форума
   const [forumSearch, setForumSearch] = useState<string>('');
 
@@ -50,34 +62,22 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
   const handleVote = (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
     const currentVote = votesRecord[id];
-
-    setForumPosts(prevPosts => prevPosts.map(post => {
-      if (post.id !== id) return post;
-      let diff = 0;
-      if (type === 'up') {
-        if (currentVote === 'up') diff = -1;
-        else if (currentVote === 'down') diff = 2;
-        else diff = 1;
-      } else {
-        if (currentVote === 'down') diff = 1;
-        else if (currentVote === 'up') diff = -2;
-        else diff = -1;
-      }
-      return { ...post, upvotes: post.upvotes + diff };
-    }));
+    const nextVote = currentVote === type ? null : type;
 
     setVotesRecord(prev => ({
       ...prev,
-      [id]: currentVote === type ? null : type
+      [id]: nextVote,
     }));
+
+    onVote(id, type);
   };
 
   // Филтриране по табове/категории И по ключова дума от търсачката
   const filteredPosts = forumPosts.filter(post => {
-    // 1. Проверка на левите филтри/категории
-    let matchesCategory = true;
-    if (forumFilter === 'popular') matchesCategory = post.upvotes >= 15;
-    else if (forumFilter === 'unanswered') matchesCategory = post.replies === 0;
+      const displayedUpvotes = getDisplayedUpvotes(post.id, post.upvotes);
+      // 1. Проверка на левите филтри/категории
+      let matchesCategory = true;
+      if (forumFilter === 'popular') matchesCategory = displayedUpvotes >= 15;
     else if (forumFilter !== 'all') matchesCategory = post.category.toLowerCase() === forumFilter.toLowerCase();
 
     // 2. Проверка на търсачката (за заглавие, описание или тагове)
@@ -95,7 +95,7 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
   });
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (sortTab === 'top') return b.upvotes - a.upvotes;
+    if (sortTab === 'top') return getDisplayedUpvotes(b.id, b.upvotes) - getDisplayedUpvotes(a.id, a.upvotes);
     if (sortTab === 'trending') return b.views - a.views;
     return 0;
   });
@@ -168,7 +168,7 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
                 <div key={post.id} className="forum-post-row-card interactive-row" onClick={() => navigate(`/post/${post.id}`)}>
                   <div className="post-voting-sidebar-block">
                     <button className={`vote-btn ${userVoteStatus === 'up' ? 'active-upvote' : ''}`} onClick={(e) => handleVote(post.id, 'up', e)}>▲</button>
-                    <span className={`vote-count ${userVoteStatus ? 'voted-count' : ''}`}>{post.upvotes}</span>
+                    <span className={`vote-count ${userVoteStatus ? 'voted-count' : ''}`}>{getDisplayedUpvotes(post.id, post.upvotes)}</span>
                     <button className={`vote-btn ${userVoteStatus === 'down' ? 'active-downvote' : ''}`} onClick={(e) => handleVote(post.id, 'down', e)}>▼</button>
                   </div>
 

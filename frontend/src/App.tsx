@@ -4,7 +4,7 @@ import Forum from './Forum.tsx';
 import CreatePost from './CreatePost.tsx';
 import PostDetail from './PostDetail.tsx';
 import './App.css';
-import { registerUser, loginUser, getCurrentUser } from './api/auth';
+import { registerUser, loginUser, getCurrentUser, submitVote } from './api/auth';
 
 interface User {
   id: number;
@@ -38,6 +38,12 @@ interface ForumPost {
 
 type AuthMode = 'none' | 'login' | 'signup' | 'logout-confirm';
 
+const initialForumPosts: ForumPost[] = [
+  { id: '1', title: 'Stuck on JavaScript closure problem... need help!', author: 'CodeNewbie', avatar: '👨‍💻', replies: 14, views: 142, upvotes: 22, tags: ['Coding', 'JS'], category: 'Computer Science', timeAgo: '2 hours ago', description: 'Can someone explain why closures remember their outer variable scope references even after the outer functions finish executing?' },
+  { id: '2', title: 'How long are you guys studying for the SAT every day?', author: 'SatGrinder', avatar: '📚', replies: 42, views: 520, upvotes: 61, tags: ['General', 'SAT'], category: 'General', timeAgo: '5 hours ago', description: 'Trying to hit a 1500+ score on the upcoming test date.' },
+  { id: '3', title: 'Can someone check my molecular geometry chart for Chemistry?', author: 'BioChemVibe', avatar: '🧪', replies: 3, views: 45, upvotes: 8, tags: ['Chemistry', 'Help'], category: 'Biology', timeAgo: '1 day ago', description: 'Unsure about the bent geometry angle definitions.', fileName: 'chem_chart_draft.pdf' },
+];
+
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,6 +54,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authError, setAuthError] = useState<string>('');
   const [authLoading, setAuthLoading] = useState<boolean>(false);
+  const [userVotes, setUserVotes] = useState<Record<string, 'up' | 'down' | null>>({});
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -56,16 +63,25 @@ export default function App() {
     }
   }, []);
 
+  const normalizeVotes = (votes: Array<{ post_id: string; value: 'up' | 'down' }>) => {
+    return votes.reduce((acc, vote) => {
+      acc[vote.post_id] = vote.value;
+      return acc;
+    }, {} as Record<string, 'up' | 'down' | null>);
+  };
+
   const fetchCurrentUser = async () => {
     try {
       const response = await getCurrentUser();
       setCurrentUser(response.data);
+      setUserVotes(normalizeVotes(response.data.votes || []));
       setIsLoggedIn(true);
     } catch (error) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       setIsLoggedIn(false);
       setCurrentUser(null);
+      setUserVotes({});
     }
   };
 
@@ -81,10 +97,11 @@ export default function App() {
 
     try {
       const response = await registerUser({ username, email, password, grade });
-      const { access, refresh, ...userData } = response.data;
+      const { access, refresh, votes, ...userData } = response.data;
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
       setCurrentUser(userData);
+      setUserVotes(normalizeVotes(votes || []));
       setIsLoggedIn(true);
       setAuthMode('none');
     } catch (error: any) {
@@ -104,10 +121,11 @@ export default function App() {
 
     try {
       const response = await loginUser({ username, password });
-      const { access, refresh, ...userData } = response.data;
+      const { access, refresh, votes, ...userData } = response.data;
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
       setCurrentUser(userData);
+      setUserVotes(normalizeVotes(votes || []));
       setIsLoggedIn(true);
       setAuthMode('none');
     } catch (error: any) {
@@ -122,6 +140,7 @@ export default function App() {
     localStorage.removeItem('refresh_token');
     setIsLoggedIn(false);
     setCurrentUser(null);
+    setUserVotes({});
     setAuthMode('none');
     navigate('/');
   };
@@ -149,14 +168,32 @@ export default function App() {
     { id: '2', title: 'How long are you guys studying for the SAT every day?', tags: ['General', 'SAT'], replies: 42 }
   ];
 
-  const [forumPosts, setForumPosts] = useState<ForumPost[]>([
-    { id: '1', title: 'Stuck on JavaScript closure problem... need help!', author: 'CodeNewbie', avatar: '👨‍💻', replies: 14, views: 142, upvotes: 22, tags: ['Coding', 'JS'], category: 'Computer Science', timeAgo: '2 hours ago', description: 'Can someone explain why closures remember their outer variable scope references even after the outer functions finish executing?' },
-    { id: '2', title: 'How long are you guys studying for the SAT every day?', author: 'SatGrinder', avatar: '📚', replies: 42, views: 520, upvotes: 61, tags: ['General', 'SAT'], category: 'General', timeAgo: '5 hours ago', description: 'Trying to hit a 1500+ score on the upcoming test date.' },
-    { id: '3', title: 'Can someone check my molecular geometry chart for Chemistry?', author: 'BioChemVibe', avatar: '🧪', replies: 3, views: 45, upvotes: 8, tags: ['Chemistry', 'Help'], category: 'Biology', timeAgo: '1 day ago', description: 'Unsure about the bent geometry angle definitions.', fileName: 'chem_chart_draft.pdf' },
-  ]);
+  const [forumPosts, setForumPosts] = useState<ForumPost[]>(initialForumPosts);
 
   const handleIncrementReplyMetrics = (postId: string) => {
     setForumPosts(prev => prev.map(p => p.id === postId ? { ...p, replies: p.replies + 1 } : p));
+  };
+
+  const handleForumVote = async (postId: string, voteType: 'up' | 'down') => {
+    if (!isLoggedIn) {
+      setAuthMode('login');
+      return;
+    }
+
+    const currentVote = userVotes[postId];
+    const nextVote = currentVote === voteType ? null : voteType;
+    const voteValue = nextVote === null ? 'none' : nextVote;
+
+    setUserVotes(prev => ({
+      ...prev,
+      [postId]: nextVote,
+    }));
+
+    try {
+      await submitVote({ post_id: postId, value: voteValue });
+    } catch (error) {
+      console.error('Vote save failed', error);
+    }
   };
 
   const handlePublishPost = (newPostData: {
@@ -289,7 +326,12 @@ export default function App() {
 
           <Route path="/forum" element={
             <main className="main-content">
-              <Forum categories={categories} forumPosts={forumPosts} setForumPosts={setForumPosts} />
+              <Forum
+                categories={categories}
+                forumPosts={forumPosts}
+                userVotes={userVotes}
+                onVote={handleForumVote}
+              />
             </main>
           } />
 
@@ -301,7 +343,7 @@ export default function App() {
 
           <Route path="/post/:id" element={
             <main className="main-content">
-              <PostDetail forumPosts={forumPosts} onAddReplyCount={handleIncrementReplyMetrics} />
+              <PostDetail forumPosts={forumPosts} userVotes={userVotes} onAddReplyCount={handleIncrementReplyMetrics} />
             </main>
           } />
         </Routes>
