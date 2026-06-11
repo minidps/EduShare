@@ -346,7 +346,7 @@ export default function App() {
 
           <Route path="/post/:id" element={
             <main className="main-content">
-              <PostDetail forumPosts={forumPosts} userVotes={userVotes} onAddReplyCount={handleIncrementReplyMetrics} />
+              <PostDetail forumPosts={forumPosts} userVotes={userVotes} onVote={handleForumVote} onAddReplyCount={handleIncrementReplyMetrics} />
             </main>
           } />
         </Routes>

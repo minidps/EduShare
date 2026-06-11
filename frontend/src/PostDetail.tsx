@@ -28,15 +28,23 @@ interface ForumPost {
 interface PostDetailProps {
   forumPosts: ForumPost[];
   userVotes: Record<string, 'up' | 'down' | null>;
+  onVote: (postId: string, voteType: 'up' | 'down') => void;
   onAddReplyCount: (id: string) => void;
 }
 
-export default function PostDetail({ forumPosts, userVotes, onAddReplyCount }: PostDetailProps) {
+export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCount }: PostDetailProps) {
   const { id } = useParams<{ id: string }>(); // Вземане на ID-то директно от URL адреса
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState('');
   
   const post = forumPosts.find(p => p.id === id);
+  const currentVote = id ? userVotes[id] ?? null : null;
+  const displayedUpvotes = post ? post.upvotes + (currentVote === 'up' ? 1 : currentVote === 'down' ? -1 : 0) : 0;
+
+  const handleVote = (type: 'up' | 'down') => {
+    if (!post) return;
+    onVote(post.id, type);
+  };
 
   const [replies, setReplies] = useState<Reply[]>([
     { id: '1', author: 'StudyGuru99', avatar: '🦉', text: 'Thanks for bringing this up!', timeAgo: '1 hour ago' },
@@ -92,8 +100,17 @@ export default function PostDetail({ forumPosts, userVotes, onAddReplyCount }: P
           <div className="thread-body-text-content" dangerouslySetInnerHTML={{ __html: post.description || '' }} />
 
           <div className="thread-footer-metrics">
-            <span className="metric-badge">▲ {post.upvotes + (userVotes[post.id] === 'up' ? 1 : userVotes[post.id] === 'down' ? -1 : 0)} Upvotes</span>
+            <span className="metric-badge">▲ {displayedUpvotes} Upvotes</span>
             <span className="metric-badge">💬 {post.replies + replies.length - 1} Replies</span>
+          </div>
+
+          <div className="thread-vote-actions" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+            <button className={`btn-secondary ${currentVote === 'up' ? 'active-upvote' : ''}`} type="button" onClick={() => handleVote('up')}>
+              ▲ Upvote
+            </button>
+            <button className={`btn-secondary ${currentVote === 'down' ? 'active-downvote' : ''}`} type="button" onClick={() => handleVote('down')}>
+              ▼ Downvote
+            </button>
           </div>
         </article>
 
