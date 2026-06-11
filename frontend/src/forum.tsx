@@ -62,17 +62,17 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     }
   }, [searchParams]);
 
-  const handleVote = async (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
+  const handleVote = (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
-    const success = await onVote(id, type);
-    if (!success) return;
-
     const currentVote = votesRecord[id];
     const nextVote = currentVote === type ? null : type;
+
     setVotesRecord(prev => ({
       ...prev,
       [id]: nextVote,
     }));
+
+    onVote(id, type);
   };
 
   // Филтриране по табове/категории И по ключова дума от търсачката
