@@ -39,7 +39,7 @@ export default function PostDetail({ forumPosts, userVotes, onVote, onAddReplyCo
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState('');
   
-  const post = forumPosts.find(p => p.id === id);
+  const post = forumPosts.find(p => String(p.id) === String(id));
   const currentVote = id ? userVotes[id] : null;
 
   const activeUser = currentUser || (post ? post.author : 'dimi');
