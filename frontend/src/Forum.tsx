@@ -27,6 +27,7 @@ export default function Forum({ categories, forumPosts, setForumPosts }: ForumPr
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
+  
   const [forumFilter, setForumFilter] = useState<string>('all');
   const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
   const [votesRecord, setVotesRecord] = useState<Record<string, 'up' | 'down' | null>>({});
