@@ -235,6 +235,8 @@ def serialize_post(post):
     }
 
 
+# ... (rest of your views.py above stays the same)
+
 @api_view(['GET'])
 def get_posts(request):
     from .models import Post
@@ -245,7 +247,7 @@ def get_posts(request):
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
-
+# Move this block ALL THE WAY back to the left margin (no indentation)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_post(request):
