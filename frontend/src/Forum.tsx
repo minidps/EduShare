@@ -21,7 +21,7 @@ interface ForumProps {
   categories: string[];
   forumPosts: ForumPost[];
   userVotes: Record<string, 'up' | 'down' | null>;
-  onVote: (postId: string, voteType: 'up' | 'down') => void;
+  onVote: (postId: string, voteType: 'up' | 'down') => Promise<boolean>;
 }
 
 export default function Forum({ categories, forumPosts, userVotes, onVote }: ForumProps) {
@@ -60,17 +60,17 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     }
   }, [searchParams]);
 
-  const handleVote = (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
+  const handleVote = async (id: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
+    const success = await onVote(id, type);
+    if (!success) return;
+
     const currentVote = votesRecord[id];
     const nextVote = currentVote === type ? null : type;
-
     setVotesRecord(prev => ({
       ...prev,
       [id]: nextVote,
     }));
-
-    onVote(id, type);
   };
 
   // Филтриране по табове/категории И по ключова дума от търсачката

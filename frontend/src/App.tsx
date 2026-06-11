@@ -174,10 +174,10 @@ export default function App() {
     setForumPosts(prev => prev.map(p => p.id === postId ? { ...p, replies: p.replies + 1 } : p));
   };
 
-  const handleForumVote = async (postId: string, voteType: 'up' | 'down') => {
+  const handleForumVote = async (postId: string, voteType: 'up' | 'down'): Promise<boolean> => {
     if (!isLoggedIn) {
       setAuthMode('login');
-      return;
+      return false;
     }
 
     const currentVote = userVotes[postId];
@@ -191,8 +191,10 @@ export default function App() {
 
     try {
       await submitVote({ post_id: postId, value: voteValue });
+      return true;
     } catch (error) {
       console.error('Vote save failed', error);
+      return false;
     }
   };
 
