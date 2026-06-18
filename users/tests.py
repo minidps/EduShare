@@ -91,7 +91,6 @@ class AuthenticationAndUserTests(APITestCase):
 
 class GradeTests(APITestCase):
     def setUp(self):
-        # 💡 Fixed url targeting to point directly to your configured grades endpoint routes
         self.add_grade_url = '/grades/add/'
         self.user = User.objects.create_user(username="student", password="password")
         self.subject = Subject.objects.create(name="Mathematics")
@@ -106,16 +105,13 @@ class GradeTests(APITestCase):
         self.assertTrue(Grade.objects.filter(user=self.user, value=95).exists())
 
     def test_add_grade_validation_errors(self):
-        # Missing payload
         response = self.client.post(self.add_grade_url, {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Non-numeric value
         payload = {"subject_id": self.subject.id, "value": "not-a-number"}
         response = self.client.post(self.add_grade_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Subject not found
         payload = {"subject_id": 9999, "value": 80}
         response = self.client.post(self.add_grade_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -187,7 +183,6 @@ class ForumAndVotingTests(APITestCase):
         self.assertFalse(PostVote.objects.filter(user=self.user, post_id=str(self.post.id)).exists())
 
 
-# 💡 NEW TEST CLASS: Covering Comments, Pinning, and Reports
 class CommentAndInteractionTests(APITestCase):
     def setUp(self):
         self.post_author = User.objects.create_user(username="post_owner", password="password")
@@ -226,7 +221,6 @@ class CommentAndInteractionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["text"], payload["text"])
         
-        # Verify replies counter incremented on parent post
         self.post.refresh_from_db()
         self.assertEqual(self.post.replies, 1)
 
@@ -243,7 +237,6 @@ class CommentAndInteractionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["isPinned"])
         
-        # Unpin toggle validation
         response = self.client.post(self.pin_url)
         self.assertFalse(response.data["isPinned"])
 

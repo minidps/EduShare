@@ -184,7 +184,6 @@ def vote_post(request: Request) -> Response:
 
         post.save()
         
-    # 💡 FIX: Reload the post record from the DB to replace F() objects with actual integers
     post.refresh_from_db()
         
     return Response({'success': 'Vote updated successfully'}, status=status.HTTP_200_OK)
@@ -345,18 +344,15 @@ def post_comments_api(request: Request, post_id: int) -> Response:
             
             return Response(serialize_comment(new_comment), status=status.HTTP_201_CREATED)
             
-       # ... keep everything inside post_comments_api exactly as it is ...
         except Exception as e:
             return Response({'error': f'Failed to save comment: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# 💡 FIX: Removed extra spaces so these views are now correctly sitting at the root module level
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def pin_comment_api(request: Request, comment_id: int) -> Response:
     comment = get_object_or_404(Comment, id=comment_id)
     
-    # Check if the user trying to pin is the original creator of the post
     if comment.post.author != request.user:
         return Response({'error': 'Only the post author can pin comments.'}, status=status.HTTP_403_FORBIDDEN)
         
@@ -381,12 +377,10 @@ def report_comment_api(request: Request, comment_id: int) -> Response:
 @permission_classes([IsAuthenticated])
 def report_post_api(request: Request, post_id: int) -> Response:
     post = get_object_or_404(Post, id=post_id)
-    # Add your moderation tracking logic here if needed
     return Response({'success': 'Post thread reported successfully'}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def report_post_api(request: Request, post_id: int) -> Response:
     post = get_object_or_404(Post, id=post_id)
-    # Add your moderation tracking logic here if needed
     return Response({'success': 'Post thread reported successfully'}, status=status.HTTP_200_OK)

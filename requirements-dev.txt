@@ -1,9 +1,6 @@
-# Включва всички основни пакети от requirements.txt
 -r requirements.txt
 
-# Инструменти за тестване и симулации
 pytest-django>=4.8.0
 flake8>=7.0.0
 
-# Графичен дебъгер за административния панел на Django (по избор)
 django-debug-toolbar>=4.3.0

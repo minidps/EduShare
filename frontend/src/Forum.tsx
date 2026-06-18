@@ -42,7 +42,6 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     await onVote(postId, type);
   };
 
-  // Filtering by category and search query
   const filteredPosts = forumPosts.filter(post => {
     const matchesCategory = forumFilter === 'all' || post.category.toLowerCase() === forumFilter.toLowerCase();
     const matchesSearch = searchQuery === '' || 
@@ -51,16 +50,14 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     return matchesCategory && matchesSearch;
   });
 
-  // Sorting tabs
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     if (sortTab === 'top') {
-      // 💡 FIX 1: Sort by post.upvotes directly
       return b.upvotes - a.upvotes;
     }
     if (sortTab === 'trending') {
       return (b.replies + b.views) - (a.replies + a.views);
     }
-    return 0; // Default 'latest'
+    return 0;
   });
 
   const getCategoryCount = (catName: string) => {
@@ -123,7 +120,6 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
                   <div className="post-vote-sidebar-col">
                     <button className={`vote-btn ${userVoteStatus === 'up' ? 'active-upvote' : ''}`} onClick={(e) => handleVote(post.id, 'up', e)}>▲</button>
                     
-                    {/* 💡 FIX 2: Render post.upvotes directly without modifying it again */}
                     <span className={`vote-count ${userVoteStatus ? 'voted-count' : ''}`}>{post.upvotes}</span>
                     
                     <button className={`vote-btn ${userVoteStatus === 'down' ? 'active-downvote' : ''}`} onClick={(e) => handleVote(post.id, 'down', e)}>▼</button>

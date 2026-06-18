@@ -12,7 +12,7 @@ interface User {
 interface AccountProps {
   currentUser: User | null;
   isLoggedIn: boolean;
-  onUserUpdate?: (updatedUser: User) => void; // Syncs state back to your main App component
+  onUserUpdate?: (updatedUser: User) => void;
 }
 
 export default function Account({ currentUser, isLoggedIn, onUserUpdate }: AccountProps) {
@@ -22,7 +22,6 @@ export default function Account({ currentUser, isLoggedIn, onUserUpdate }: Accou
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // 2. Load the current user details into fields when the page loads
   useEffect(() => {
     if (!isLoggedIn || !currentUser) {
       navigate('/');
@@ -33,28 +32,24 @@ export default function Account({ currentUser, isLoggedIn, onUserUpdate }: Accou
   }, [isLoggedIn, currentUser, navigate]);
 
   if (!currentUser) return null;
-
-  // 3. Send the updated data to your Django backend
   const handleSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault(); // This stops the page from refreshing automatically
+    e.preventDefault();
     setLoading(true);
     setMessage(null);
 
-    const token = localStorage.getItem('access'); // Grabs your login token from local storage
+    const token = localStorage.getItem('access');
 
     try {
       
-      // ===> PASTE IT RIGHT HERE <===
       const response = await fetch('http://127.0.0.1:8000/me/update/', { 
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // This tells Django who you are
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ email, grade }), // This passes your inputs to the backend
+        body: JSON.stringify({ email, grade }),
       });
 
-      // Safely capture response body to prevent "unexpected end of data" parsing errors
       const responseText = await response.text();
       const data = responseText ? JSON.parse(responseText) : {};
 
@@ -81,7 +76,6 @@ export default function Account({ currentUser, isLoggedIn, onUserUpdate }: Accou
           <p className="account-subtitle">Manage your student profile settings</p>
         </div>
 
-        {/* 4. Notification Alerts (Error or Success messages) */}
         {message && (
           <div className={`alert-box ${message.type}`}>
             {message.text}
@@ -92,7 +86,6 @@ export default function Account({ currentUser, isLoggedIn, onUserUpdate }: Accou
           <div className="form-group-row">
             <div className="form-group">
               <label htmlFor="acc-username">Username</label>
-              {/* Keep this one disabled because usernames shouldn't be altered easily */}
               <input 
                 type="text" 
                 id="acc-username" 
@@ -104,7 +97,6 @@ export default function Account({ currentUser, isLoggedIn, onUserUpdate }: Accou
 
             <div className="form-group">
               <label htmlFor="acc-grade">Grade / Education level</label>
-              {/* Added value and onChange handler so you can select options */}
               <select 
                 id="acc-grade" 
                 value={grade} 
@@ -124,7 +116,6 @@ export default function Account({ currentUser, isLoggedIn, onUserUpdate }: Accou
 
           <div className="form-group">
             <label htmlFor="acc-email">Email Address</label>
-            {/* Switched to controlled state variable and removed 'disabled' */}
             <input 
               type="email" 
               id="acc-email" 

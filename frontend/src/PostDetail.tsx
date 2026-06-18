@@ -137,7 +137,6 @@ export default function PostDetail({
     }
   };
 
-  // 💡 New Function: Handles reporting the main thread post
   const handleReportPost = async () => {
     if (!id) return;
     if (!window.confirm("Are you sure you want to report this post thread?")) return;
@@ -185,7 +184,6 @@ export default function PostDetail({
 
           <h1 className="thread-title">{post.title}</h1>
 
-          {/* 💡 Fixed: Uses dangerouslySetInnerHTML to properly parse HTML paragraph tags */}
           <div className="thread-body-description">
             {post.description ? (
               <div dangerouslySetInnerHTML={{ __html: post.description }} />
@@ -224,7 +222,6 @@ export default function PostDetail({
               </button>
             </div>
 
-            {/* 💡 Fixed: Added onClick handler to connect to backend */}
             <button className="btn-report-action" onClick={handleReportPost}>
               🚩 Report Thread
             </button>

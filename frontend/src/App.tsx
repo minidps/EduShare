@@ -52,7 +52,6 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [userVotes, setUserVotes] = useState<Record<string, 'up' | 'down' | null>>({});
 
-  // Mock dashboard data to prevent runtime crashes
   const trendingMaterials = [
     { id: '1', type: 'Notes', subject: 'Mathematics', title: 'Calculus BC Cheat Sheet', downloads: 142 }
   ];

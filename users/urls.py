@@ -9,9 +9,9 @@ from .views import (
     update_account, 
     create_post, 
     post_comments_api,
-    pin_comment_api,      # 💡 Imported new views handler
-    report_comment_api,   # 💡 Imported new views handler
-    report_post_api       # 💡 Imported new views handler
+    pin_comment_api,
+    report_comment_api,
+    report_post_api
 )
 
 urlpatterns = [
@@ -24,8 +24,6 @@ urlpatterns = [
     path('posts/create/', create_post, name='create_post'),
     path('account/update/', update_account, name='update_account'),
     path('posts/<int:post_id>/comments/', post_comments_api, name='post_comments'),
-    
-    # 💡 Added explicit comment interaction routing configuration rules
     path('comments/<int:comment_id>/pin/', pin_comment_api, name='pin_comment'),
     path('comments/<int:comment_id>/report/', report_comment_api, name='report_comment'),
 
