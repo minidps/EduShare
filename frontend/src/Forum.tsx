@@ -37,19 +37,12 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
   const [sortTab, setSortTab] = useState<'latest' | 'top' | 'trending'>('latest');
   const votesRecord = userVotes;
 
-  const getDisplayedUpvotes = (postId: string, baseUpvotes: number) => {
-    const vote = votesRecord[postId];
-    if (vote === 'up') return baseUpvotes + 1;
-    if (vote === 'down') return baseUpvotes - 1;
-    return baseUpvotes;
-  };
-
   const handleVote = async (postId: string, type: 'up' | 'down', e: React.MouseEvent) => {
     e.stopPropagation();
     await onVote(postId, type);
   };
 
-  // Филтриране по категория и търсене
+  // Filtering by category and search query
   const filteredPosts = forumPosts.filter(post => {
     const matchesCategory = forumFilter === 'all' || post.category.toLowerCase() === forumFilter.toLowerCase();
     const matchesSearch = searchQuery === '' || 
@@ -58,15 +51,16 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
     return matchesCategory && matchesSearch;
   });
 
-  // Сортиране по табове
+  // Sorting tabs
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     if (sortTab === 'top') {
-      return getDisplayedUpvotes(b.id, b.upvotes) - getDisplayedUpvotes(a.id, a.upvotes);
+      // 💡 FIX 1: Sort by post.upvotes directly
+      return b.upvotes - a.upvotes;
     }
     if (sortTab === 'trending') {
       return (b.replies + b.views) - (a.replies + a.views);
     }
-    return 0; // По подразбиране 'latest'
+    return 0; // Default 'latest'
   });
 
   const getCategoryCount = (catName: string) => {
@@ -128,7 +122,10 @@ export default function Forum({ categories, forumPosts, userVotes, onVote }: For
                 <div key={post.id} className="forum-post-row-item" onClick={() => navigate(`/post/${post.id}`)}>
                   <div className="post-vote-sidebar-col">
                     <button className={`vote-btn ${userVoteStatus === 'up' ? 'active-upvote' : ''}`} onClick={(e) => handleVote(post.id, 'up', e)}>▲</button>
-                    <span className={`vote-count ${userVoteStatus ? 'voted-count' : ''}`}>{getDisplayedUpvotes(post.id, post.upvotes)}</span>
+                    
+                    {/* 💡 FIX 2: Render post.upvotes directly without modifying it again */}
+                    <span className={`vote-count ${userVoteStatus ? 'voted-count' : ''}`}>{post.upvotes}</span>
+                    
                     <button className={`vote-btn ${userVoteStatus === 'down' ? 'active-downvote' : ''}`} onClick={(e) => handleVote(post.id, 'down', e)}>▼</button>
                   </div>
 

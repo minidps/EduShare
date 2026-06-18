@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from django.db import models, transaction  # Added transaction module
+from django.db import models, transaction
 from django.db.models import F
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -13,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import UserProfile, Grade, Subject, PostVote, Post
+from .models import UserProfile, Grade, Subject, PostVote, Post, Comment
 
 
 def serialize_grades(user: User) -> List[Dict[str, Any]]:
@@ -29,7 +31,7 @@ def serialize_grades(user: User) -> List[Dict[str, Any]]:
 def serialize_votes(user: User) -> List[Dict[str, str]]:
     return [
         {
-            "post_id": vote.post_id,
+            "post_id": str(vote.post_id),  
             "value": 'up' if vote.value == PostVote.UPVOTE else 'down'
         }
         for vote in PostVote.objects.filter(user=user)
@@ -138,20 +140,19 @@ def add_grade(request: Request) -> Response:
 @permission_classes([IsAuthenticated])
 def vote_post(request: Request) -> Response:
     user: User = request.user
-    post_id: str | None = request.data.get('post_id')
-    vote_type: str | None = request.data.get('value')  # 'up', 'down', 'none'
+    post_id: Any = request.data.get('post_id')
+    vote_type: str | None = request.data.get('value')
 
     if not post_id or not vote_type:
         return Response({'error': 'post_id and value are required'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        post: Post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
-        return Response({'error': 'Post not found'}, status=status.HTTP_444_NOT_FOUND if status.HTTP_404_NOT_FOUND else status.HTTP_404_NOT_FOUND)
+        post: Post = Post.objects.get(id=int(post_id))
+    except (Post.DoesNotExist, ValueError):
+        return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Wrapped in a transaction block to safely modify multi-model data states securely
     with transaction.atomic():
-        existing_vote: PostVote | None = PostVote.objects.filter(user=user, post_id=post_id).first()
+        existing_vote: PostVote | None = PostVote.objects.filter(user=user, post_id=str(post_id)).first()
 
         if vote_type == 'none':
             if existing_vote:
@@ -169,7 +170,7 @@ def vote_post(request: Request) -> Response:
                     existing_vote.save()
             else:
                 post.upvotes = F('upvotes') + 1
-                PostVote.objects.create(user=user, post_id=post_id, value=PostVote.UPVOTE)
+                PostVote.objects.create(user=user, post_id=str(post_id), value=PostVote.UPVOTE)
         elif vote_type == 'down':
             if existing_vote:
                 if existing_vote.value == PostVote.UPVOTE:
@@ -179,9 +180,12 @@ def vote_post(request: Request) -> Response:
                     existing_vote.save()
             else:
                 post.downvotes = F('downvotes') + 1
-                PostVote.objects.create(user=user, post_id=post_id, value=PostVote.DOWNVOTE)
+                PostVote.objects.create(user=user, post_id=str(post_id), value=PostVote.DOWNVOTE)
 
         post.save()
+        
+    # 💡 FIX: Reload the post record from the DB to replace F() objects with actual integers
+    post.refresh_from_db()
         
     return Response({'success': 'Vote updated successfully'}, status=status.HTTP_200_OK)
 
@@ -213,7 +217,7 @@ def serialize_post(post: Post) -> Dict[str, Any]:
         downvotes_count = post.downvotes
 
     return {
-        'id': str(post.id),  # 🌟 CHANGE THIS FROM int(post.id) TO str(post.id)
+        'id': str(post.id),  
         'title': post.title,
         'author': post.author.username,
         'avatar': post.author.username[0].upper() if post.author.username else 'U',
@@ -231,7 +235,6 @@ def serialize_post(post: Post) -> Dict[str, Any]:
 @api_view(['GET'])
 def get_posts(request: Request) -> Response:
     try:
-        # Added .select_related('author') to prevent N+1 overhead queries
         posts = Post.objects.all().select_related('author').order_by('-created_at')
         serialized: List[Dict[str, Any]] = [serialize_post(post) for post in posts]
         return Response(serialized, status=status.HTTP_200_OK)
@@ -298,3 +301,92 @@ def create_post(request: Request) -> Response:
         return Response(serialize_post(post), status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def serialize_comment(comment: Comment) -> Dict[str, Any]:
+    username = comment.author.username if comment.author else 'Anonymous'
+    return {
+        "id": str(comment.id),
+        "author": username,
+        "avatar": username[0].upper() if username else '🎓',
+        "text": comment.text,
+        "timeAgo": get_time_ago(comment.created_at),
+        "isPinned": getattr(comment, 'is_pinned', False)
+    }
+
+
+@api_view(['GET', 'POST'])
+def post_comments_api(request: Request, post_id: int) -> Response:
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        comments = Comment.objects.filter(post=post).select_related('author').order_by('created_at')
+        return Response([serialize_comment(c) for c in comments], status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        text = request.data.get('text', '').strip()
+        if not text:
+            return Response({'error': 'Comment body cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            with transaction.atomic():
+                new_comment = Comment.objects.create(
+                    post=post,
+                    author=request.user,
+                    text=text
+                )
+                Post.objects.filter(id=post_id).update(replies=F('replies') + 1)
+            
+            return Response(serialize_comment(new_comment), status=status.HTTP_201_CREATED)
+            
+       # ... keep everything inside post_comments_api exactly as it is ...
+        except Exception as e:
+            return Response({'error': f'Failed to save comment: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# 💡 FIX: Removed extra spaces so these views are now correctly sitting at the root module level
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def pin_comment_api(request: Request, comment_id: int) -> Response:
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    # Check if the user trying to pin is the original creator of the post
+    if comment.post.author != request.user:
+        return Response({'error': 'Only the post author can pin comments.'}, status=status.HTTP_403_FORBIDDEN)
+        
+    comment.is_pinned = not getattr(comment, 'is_pinned', False)
+    comment.save()
+    return Response(serialize_comment(comment), status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def report_comment_api(request: Request, comment_id: int) -> Response:
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    if hasattr(comment, 'is_reported'):
+        comment.is_reported = True
+        comment.save()
+        
+    return Response({'success': 'Comment reported successfully'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def report_post_api(request: Request, post_id: int) -> Response:
+    post = get_object_or_404(Post, id=post_id)
+    # Add your moderation tracking logic here if needed
+    return Response({'success': 'Post thread reported successfully'}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def report_post_api(request: Request, post_id: int) -> Response:
+    post = get_object_or_404(Post, id=post_id)
+    # Add your moderation tracking logic here if needed
+    return Response({'success': 'Post thread reported successfully'}, status=status.HTTP_200_OK)

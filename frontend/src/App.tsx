@@ -80,10 +80,9 @@ export default function App() {
   const loadPosts = async () => {
     try {
       const response = await getPosts();
-      setForumPosts(response.data ?? []);
-    } catch (err) {
-      console.error('Failed to load posts:', err);
-      setForumPosts([]);
+      setForumPosts(response.data);
+    } catch (error) {
+      console.error("Failed to load posts:", error);
     }
   };
 
@@ -92,10 +91,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) fetchCurrentUser();
-  }, []);
+    loadPosts();
 
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      fetchCurrentUser();
+    }
+  }, []);
   const normalizeVotes = (votes: Array<{ post_id: string; value: 'up' | 'down' }>) => {
     return votes.reduce((acc, vote) => {
       acc[vote.post_id] = vote.value;
@@ -199,7 +201,10 @@ export default function App() {
     }
   };
 
-  const handleForumVote = async (postId: string, voteType: 'up' | 'down') => {
+  const handleForumVote = async (
+    postId: string,
+    voteType: 'up' | 'down'
+  ): Promise<boolean> => {
     if (!isLoggedIn) {
       setAuthMode('login');
       return false;
@@ -210,25 +215,65 @@ export default function App() {
     const voteValue = nextVote === null ? 'none' : nextVote;
 
     try {
-      await submitVote({ post_id: postId, value: voteValue });
+      await submitVote({
+        post_id: postId,
+        value: voteValue
+      });
+
+      await loadPosts();
+
+      setForumPosts(prev =>
+        prev.map(post => {
+          if (post.id !== postId) return post;
+
+          let change = 0;
+
+          if (currentVote === null || currentVote === undefined) {
+            change = voteType === 'up' ? 1 : -1;
+          } else if (currentVote === 'up' && voteType === 'up') {
+            change = -1;
+          } else if (currentVote === 'down' && voteType === 'down') {
+            change = 1;
+          } else if (currentVote === 'up' && voteType === 'down') {
+            change = -2;
+          } else if (currentVote === 'down' && voteType === 'up') {
+            change = 2;
+          }
+
+          return {
+            ...post,
+            upvotes: post.upvotes + change
+          };
+        })
+      );
+
       setUserVotes(prev => ({
         ...prev,
-        [postId]: nextVote,
+        [postId]: nextVote
       }));
+
       return true;
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error('Vote save failed', error);
       return false;
     }
   };
 
-  const handlePublishPost = async (newPostData: any) => {
+  const handlePublishPost = async (newPostData: {
+    title: string;
+    category: string;
+    tags: string[];
+    description: string;
+    fileName: string | null;
+  }) => {
     try {
       await createPost(newPostData);
+
       await loadPosts();
+
       navigate('/forum');
-    } catch (err) {
-      console.error('Failed to create post:', err);
+    } catch (error) {
+      console.error('Failed to create post:', error);
     }
   };
 

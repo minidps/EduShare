@@ -190,21 +190,56 @@
   margin: 0;
 }
 
+/* Ensure the parent box uses standard spacing */
 .replies-stream-box {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
+  margin-top: 1rem;
 }
 
+/* Ensure the layout wraps items horizontally with adequate spacing */
 .reply-node-card {
   background-color: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 1.25rem;
+  display: flex;             /* 💡 Arranges avatar and text horizontally */
+  align-items: flex-start;   /* Keeps avatar aligned to the top row */
+  gap: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+/* Give the circular visual structure to your text avatar */
+.reply-avatar-col {
+  width: 40px;
+  height: 40px;
+  background-color: #e8f5e9;
+  color: #1b4332;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;            /* Prevents the avatar circle from warping */
+}
+
+/* Force elements inside metadata section to align horizontally */
+.reply-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Action button icons adjustments */
+.reply-actions-footer {
   display: flex;
   gap: 1rem;
-  position: relative;
-  transition: border-color 0.2s;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.6rem;
+  margin-top: 0.5rem;
 }
 
 .reply-node-card.pinned-reply-border {

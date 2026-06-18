@@ -8,5 +8,10 @@ def home(request):
 urlpatterns = [
     path("", home),
     path("admin/", admin.site.urls),
+    
+    # 💡 1. Keep this so all login/register/me routes continue working perfectly:
     path("api/auth/", include("users.urls")),
+    
+    # 💡 2. Add this line so all post, vote, and comment routes can also find users.urls:
+    path("api/", include("users.urls")),
 ]

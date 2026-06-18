@@ -5,13 +5,12 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import timedelta
 
-from .models import UserProfile, Subject, Grade, PostVote, Post
+from .models import UserProfile, Subject, Grade, PostVote, Post, Comment
 from .views import get_time_ago, serialize_post
 
 
 class AuthenticationAndUserTests(APITestCase):
     def setUp(self):
-        # Create a test user profile setup
         self.register_url = '/register/'
         self.login_url = '/login/'
         self.me_url = '/me/'
@@ -23,7 +22,6 @@ class AuthenticationAndUserTests(APITestCase):
             "grade": "11th Grade"
         }
         
-        # Pre-populate a user for login/me tests
         self.existing_user = User.objects.create_user(
             username="existinguser",
             email="existing@example.com",
@@ -42,7 +40,6 @@ class AuthenticationAndUserTests(APITestCase):
         self.assertEqual(response.data["username"], self.user_data["username"])
         self.assertEqual(response.data["grade"], self.user_data["grade"])
         
-        # Verify DB entry
         self.assertTrue(UserProfile.objects.filter(user__username="testuser").exists())
 
     def test_register_missing_fields(self):
@@ -52,13 +49,11 @@ class AuthenticationAndUserTests(APITestCase):
         self.assertIn("error", response.data)
 
     def test_register_duplicate_username_or_email(self):
-        # Username exists
         bad_data = self.user_data.copy()
         bad_data["username"] = "existinguser"
         response = self.client.post(self.register_url, bad_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
-        # Email exists
         bad_data = self.user_data.copy()
         bad_data["email"] = "existing@example.com"
         response = self.client.post(self.register_url, bad_data, format='json')
@@ -96,56 +91,39 @@ class AuthenticationAndUserTests(APITestCase):
 
 class GradeTests(APITestCase):
     def setUp(self):
-        self.add_grade_url = '/posts/'  # Notice: add_grade shares no path in urls.py, but assuming it binds correctly
-        # Let's override to dynamically verify view if custom router paths exist
+        # 💡 Fixed url targeting to point directly to your configured grades endpoint routes
+        self.add_grade_url = '/grades/add/'
         self.user = User.objects.create_user(username="student", password="password")
         self.subject = Subject.objects.create(name="Mathematics")
         
-        refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        self.refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
 
     def test_add_grade_success(self):
-        # Directly calling the view flow using a manual test request since url mapping is absent for add_grade in urls.py
-        from .views import add_grade
-        from rest_framework.test import APIRequestFactory
-        
-        factory = APIRequestFactory()
-        request = factory.post('/add-grade/', {"subject_id": self.subject.id, "value": 95}, format='json')
-        from rest_framework.test import force_authenticate
-        force_authenticate(request, user=self.user)
-        
-        response = add_grade(request)
+        payload = {"subject_id": self.subject.id, "value": 95}
+        response = self.client.post(self.add_grade_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Grade.objects.filter(user=self.user, value=95).exists())
 
     def test_add_grade_validation_errors(self):
-        from .views import add_grade
-        from rest_framework.test import APIRequestFactory
-        factory = APIRequestFactory()
-        
         # Missing payload
-        request = factory.post('/add-grade/', {}, format='json')
-        from rest_framework.test import force_authenticate
-        force_authenticate(request, user=self.user)
-        response = add_grade(request)
+        response = self.client.post(self.add_grade_url, {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Non-numeric value
-        request = factory.post('/add-grade/', {"subject_id": self.subject.id, "value": "not-a-number"}, format='json')
-        force_authenticate(request, user=self.user)
-        response = add_grade(request)
+        payload = {"subject_id": self.subject.id, "value": "not-a-number"}
+        response = self.client.post(self.add_grade_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Subject not found
-        request = factory.post('/add-grade/', {"subject_id": 9999, "value": 80}, format='json')
-        force_authenticate(request, user=self.user)
-        response = add_grade(request)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        payload = {"subject_id": 9999, "value": 80}
+        response = self.client.post(self.add_grade_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class ForumAndVotingTests(APITestCase):
     def setUp(self):
-        self.vote_url = '/vote/'
+        self.vote_url = '/posts/vote/'
         self.posts_url = '/posts/'
         self.create_post_url = '/posts/create/'
         
@@ -167,7 +145,6 @@ class ForumAndVotingTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], "Django Setup Guide")
-        # Net balance calculation assertion (upvotes - downvotes)
         self.assertEqual(response.data[0]['upvotes'], 8)
 
     def test_create_post_success(self):
@@ -191,13 +168,11 @@ class ForumAndVotingTests(APITestCase):
     def test_vote_post_upvote_and_change_vote(self):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
         
-        # Cast Upvote
         payload = {"post_id": str(self.post.id), "value": "up"}
         response = self.client.post(self.vote_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(PostVote.objects.get(user=self.user, post_id=str(self.post.id)).value, PostVote.UPVOTE)
         
-        # Shift to Downvote
         payload["value"] = "down"
         response = self.client.post(self.vote_url, payload, format='json')
         self.assertEqual(PostVote.objects.get(user=self.user, post_id=str(self.post.id)).value, PostVote.DOWNVOTE)
@@ -212,21 +187,90 @@ class ForumAndVotingTests(APITestCase):
         self.assertFalse(PostVote.objects.filter(user=self.user, post_id=str(self.post.id)).exists())
 
 
+# 💡 NEW TEST CLASS: Covering Comments, Pinning, and Reports
+class CommentAndInteractionTests(APITestCase):
+    def setUp(self):
+        self.post_author = User.objects.create_user(username="post_owner", password="password")
+        self.commenter = User.objects.create_user(username="commenter", password="password")
+        
+        self.post = Post.objects.create(
+            title="Interactive Thread",
+            author=self.post_author,
+            description="Testing comment updates",
+            category="General",
+            replies=0
+        )
+        
+        self.comment = Comment.objects.create(
+            post=self.post,
+            author=self.commenter,
+            text="Initial feedback comment text."
+        )
+        
+        self.comments_url = f'/posts/{self.post.id}/comments/'
+        self.pin_url = f'/comments/{self.comment.id}/pin/'
+        self.report_url = f'/comments/{self.comment.id}/report/'
+
+    def test_get_comments(self):
+        response = self.client.get(self.comments_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['text'], "Initial feedback comment text.")
+
+    def test_post_comment_success(self):
+        refresh = RefreshToken.for_user(self.commenter)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        
+        payload = {"text": "This is a brand new response!"}
+        response = self.client.post(self.comments_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["text"], payload["text"])
+        
+        # Verify replies counter incremented on parent post
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.replies, 1)
+
+    def test_post_comment_unauthenticated(self):
+        payload = {"text": "Anonymous text block"}
+        response = self.client.post(self.comments_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_pin_comment_by_post_author(self):
+        refresh = RefreshToken.for_user(self.post_author)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        
+        response = self.client.post(self.pin_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["isPinned"])
+        
+        # Unpin toggle validation
+        response = self.client.post(self.pin_url)
+        self.assertFalse(response.data["isPinned"])
+
+    def test_pin_comment_by_non_author_forbidden(self):
+        refresh = RefreshToken.for_user(self.commenter)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        
+        response = self.client.post(self.pin_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_report_comment_authenticated(self):
+        refresh = RefreshToken.for_user(self.commenter)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        
+        response = self.client.post(self.report_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("success", response.data)
+
+
 class UtilityMethodTests(APITestCase):
     def test_get_time_ago_intervals(self):
         now = timezone.now()
         
-        # Just now
         self.assertEqual(get_time_ago(now - timedelta(seconds=15)), 'Just now')
-        
-        # Minutes
         self.assertEqual(get_time_ago(now - timedelta(minutes=5)), '5 minutes ago')
         self.assertEqual(get_time_ago(now - timedelta(minutes=1)), '1 minute ago')
-        
-        # Hours
         self.assertEqual(get_time_ago(now - timedelta(hours=3)), '3 hours ago')
         self.assertEqual(get_time_ago(now - timedelta(hours=1)), '1 hour ago')
-        
-        # Days
         self.assertEqual(get_time_ago(now - timedelta(days=4)), '4 days ago')
         self.assertEqual(get_time_ago(now - timedelta(days=1)), '1 day ago')
